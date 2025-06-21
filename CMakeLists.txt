@@ -9,3 +9,8 @@ project(PersonalServer VERSION 0.0.1)
 
 # 创建dist目录，用于最终打包
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/dist)
+
+# 全局include目录
+include_directories(${CMAKE_SOURCE_DIR}/extern/cpp-httplib)
+
+add_subdirectory(modules)
