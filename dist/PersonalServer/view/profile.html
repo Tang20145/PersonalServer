@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JcGam1ng的个人网站</title>
+    <style>
+        /* 全局样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        body {
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 导航栏 */
+        nav {
+            background: #333;
+            color: #fff;
+            padding: 1rem 0;
+        }
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        nav ul li {
+            margin-right: 20px;
+        }
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        section {
+            background: #fff;
+            padding: 2rem;
+            margin: 20px auto; /* 上下 20px，左右自动（居中） */
+            width: 700px;      /* 固定宽度（可根据需要调整） */
+            max-width: 90%;    /* 小屏幕下最大占90%，防止溢出 */
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        header {
+            width: 700px;      /* 和 section 保持相同的固定宽度 */
+            max-width: 90%;
+            margin: 20px auto; /* 居中 */
+        }
+
+        footer {
+            width: 700px;      /* 固定宽度 */
+            max-width: 90%;
+        }
+
+        /* 图片占位位置（示例） */
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            background: #ddd;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+        }
+
+
+        /* 主要内容区 - 改为卡片样式 */
+        section {
+            background: #fff;
+            padding: 2rem;
+            margin: 20px auto;
+            max-width: 90%;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        section h2 {
+            margin-bottom: 1rem;
+            color: #333;
+            border-bottom: 2px solid #f4f4f4;
+            padding-bottom: 0.5rem;
+        }
+
+        /* 技能列表 */
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .skills li {
+            background: #f4f4f4;
+            padding: 5px 15px;
+            list-style: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* 项目链接样式 */
+        .project-link {
+            display: flex;       /* 启用 Flexbox 布局 */
+            justify-content: space-between; /* 让左右两部分分散对齐 */
+            align-items: center; /* 垂直居中 */
+            margin: 10px 0;
+            padding: 8px;
+            background: #f8f8f8;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #0066cc;
+            transition: all 0.3s ease;
+        }
+
+
+        /* 页脚 */
+        footer {
+            background: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 30px;
+            border-radius: 8px;
+            max-width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            section, header, footer {
+                max-width: 95%;
+                padding: 1.5rem;
+            }
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+            nav ul li {
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 头部区域（图片占位或标题） -->
+    <header id="home">
+        <div class="container">
+            <div class="profile-img">头像，暂时没实现 :)</div> <!-- 这里是图片占位 -->
+            <h1>你好，我是<span style="color: #0066cc;">方糖</span></h1>
+            <p>编程爱好者，半个程序员（未毕业，Gamer）</p>
+        </div>
+    </header>
+
+    <!-- 关于我 -->
+    <section id="about">
+        <div class="container">
+            <h2>About</h2>
+            <p>我是一个建筑学大学生，但我不想干建筑了，如你所见，我想干这个</p>
+            <p>除了编程，我还喜欢游戏、电影、羽毛球、游泳、魔方。我现在最喜欢的游戏是Outer Wilds</p>
+        </div>
+    </section>
+
+    <!-- 技能 -->
+    <section id="skills">
+        <div class="container">
+            <h2>Skills</h2>
+            <ul class="skills">
+                <li>C/C++</li>
+                <li>数据结构与算法</li>
+                <li>Socket网络编程</li>
+                <li>操作系统</li>
+                <li>计算机网络</li>
+                <li>Linux</li>
+                <li>MySQL</li>
+                <li>Select、Epoll IO复用技术</li>
+                <li>CMake</li>
+                <li>Git</li>
+                <li>计算机组成（最近在学）</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 项目 -->
+    <section id="projects">
+        <div class="container">
+            <h2>Projects</h2>
+            <a href="https://gmhub.com/game/3119" class="project-link">
+                <span>48h GameJam: TouchES</span>
+                <span>2023</span>
+            </a>
+            <a href="https://github.com/Tang20145/WebServer_Light" class="project-link">
+                <span>Linux 下 C++轻量级Web服务器</span>
+                <span>2024</span>
+            </a>
+            <a href="https://github.com/Tang20145/PersonalServer" class="project-link">
+                <span>你现在见到的这个我的个人网站</span>
+                <span>2025</span>
+            </a>
+        </div>
+    </section>
+    
+
+    <!-- 联系 -->
+    <section id="contact">
+        <div class="container">
+            <h2>联系我</h2>
+            <p>📧 邮箱：<a href="mailto:2323024922@qq.com">2323024922@qq.com</a></p>
+            <p>🌐 GitHub：<a href="https://github.com/Tang20145">https://github.com/Tang20145</a></p>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 方糖的个人网站.</p>
+        </div>
+    </footer>
+</body>
+</html>

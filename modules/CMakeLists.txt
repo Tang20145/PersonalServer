@@ -1,1 +1,2 @@
 add_subdirectory(TestServer)
+add_subdirectory(PersonalServer)

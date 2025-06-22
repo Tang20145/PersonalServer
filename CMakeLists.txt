@@ -3,6 +3,7 @@ if(NOT "${CMAKE_BINARY_DIR}" MATCHES "${CMAKE_SOURCE_DIR}/build")
   message(FATAL_ERROR "禁止在项目外部构建！请在项目内创建build目录后进入build执行cmake。")
 endif()
 
+# 基本配置 =========================================
 cmake_minimum_required(VERSION 3.10)
 
 project(PersonalServer VERSION 0.0.1)
@@ -13,4 +14,7 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/dist)
 # 全局include目录
 include_directories(${CMAKE_SOURCE_DIR}/extern/cpp-httplib)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# 添加模块 =========================================
 add_subdirectory(modules)
