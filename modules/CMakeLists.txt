@@ -1,2 +1,3 @@
 add_subdirectory(TestServer)
 add_subdirectory(PersonalServer)
+add_subdirectory(TestMySQLConnector)

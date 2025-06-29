@@ -12,7 +12,11 @@ project(PersonalServer VERSION 0.0.1)
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/dist)
 
 # 全局include目录
-include_directories(${CMAKE_SOURCE_DIR}/extern/cpp-httplib)
+include_directories(${CMAKE_SOURCE_DIR}/extern/cpp-httplib
+                    ${CMAKE_SOURCE_DIR}/extern/usr/include/mysql-cppconn)
+
+# 全局链接库目录
+link_directories("${CMAKE_SOURCE_DIR}/extern/usr/lib/x86 64-linux-gnu")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
