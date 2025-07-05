@@ -1,9 +1,10 @@
+# docker-compose.yml示例文件，供参考，有关的密码我就改写为xxxx了，保证服务器安全
 services:                                                       # 服务列表
   mysql:                                                        # 服务名称
     image: mysql:8.0                                            # 镜像名称
     container_name: mysql_personalServer                        # 容器名称
     environment:                                                # 指定容器可选参数的值信息 ≈ docker run -e
-      - MYSQL_ROOT_PASSWORD=root                                # mysql的root用户的密码设置
+      - MYSQL_ROOT_PASSWORD=xxxx                                # mysql的root用户的密码设置
       - MYSQL_DATABASE=personalServerDB                         # 自动创建的数据库名
     ports:                                                      # 端口映射 ≈ docker run -p
       - "3306:3306"                                             # 主机端口:容器端口

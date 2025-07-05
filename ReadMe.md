@@ -20,6 +20,9 @@ Personal Server 💽
  ├── dist
  │   ├── PersonalServer
  │   └── TestServer
+ ├── docker
+ │   ├── mysql-personalServerData
+ │   └── docker-compose.yml
  ├── docs
  ├── extern
  │   └── cpp-httplib
@@ -31,6 +34,9 @@ Personal Server 💽
 - `dist`：运行程序以及依赖环境输出目录，可以将模块从此直接复制用于打包部署
  - `PersonalServer`：主程序目录
  - `TestServer`：测试程序目录
+- `docker`：有关docker部署内容目录
+ - `mysql-personalServerData`：我的docker mysql数据映射目录
+ - `docker-compose.yml`：mysql容器配置文件，我这里写了一个修改过密码值的参考文件而非真实文件
 - `docs`：文档目录（目前没东西，说实话没想好需要写什么
 - `extern`：依赖目录
  - `cpp-httplib`：cpp-httplib库，用于实现http服务
