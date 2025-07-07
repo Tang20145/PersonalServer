@@ -13,12 +13,14 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/dist)
 
 # 全局include目录
 include_directories(${CMAKE_SOURCE_DIR}/extern/cpp-httplib
-                    ${CMAKE_SOURCE_DIR}/extern/usr/include/mysql-cppconn)
+                    ${CMAKE_SOURCE_DIR}/extern/mysql-connector-c++/include/mysqlx)
 
 # 全局链接库目录
-link_directories("${CMAKE_SOURCE_DIR}/extern/usr/lib/x86 64-linux-gnu")
+link_directories("${CMAKE_SOURCE_DIR}/extern/usr/lib/x86 64-linux-gnu"
+                  ${CMAKE_SOURCE_DIR}/extern/mysql-connector-c++/lib64
+)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+#set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # 添加模块 =========================================
 add_subdirectory(modules)
