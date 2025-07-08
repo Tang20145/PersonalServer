@@ -1,3 +1,4 @@
 add_subdirectory(TestServer)
 add_subdirectory(PersonalServer)
 add_subdirectory(TestMySQLConnector)
+add_subdirectory(TestJson)

@@ -8,12 +8,17 @@ cmake_minimum_required(VERSION 3.10)
 
 project(PersonalServer VERSION 0.0.1)
 
+# 全局启用 C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # 创建dist目录，用于最终打包
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/dist)
 
 # 全局include目录
 include_directories(${CMAKE_SOURCE_DIR}/extern/cpp-httplib
-                    ${CMAKE_SOURCE_DIR}/extern/mysql-connector-c++/include/mysqlx)
+                    ${CMAKE_SOURCE_DIR}/extern/mysql-connector-c++/include/mysqlx
+                    ${CMAKE_SOURCE_DIR}/extern/json)
 
 # 全局链接库目录
 link_directories("${CMAKE_SOURCE_DIR}/extern/usr/lib/x86 64-linux-gnu"

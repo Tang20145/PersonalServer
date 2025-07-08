@@ -3,7 +3,7 @@
 
 int main()
 {
-    mysqlx::Session sess("host", 3306, "root", "root", "personalServerDB");
+    mysqlx::Session sess("localhost", 33060, "root", "root", "personalServerDB");
     
     return 0;
 }

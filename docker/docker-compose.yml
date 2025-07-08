@@ -7,6 +7,7 @@ services:                                                       # 服务列表
       - MYSQL_DATABASE=personalServerDB                         # 自动创建的数据库名
     ports:                                                      # 端口映射 ≈ docker run -p
       - "3306:3306"                                             # 主机端口:容器端口
+      - "33060:33060"                                           # 为了支持mysqlx 的接口，需要映射这个端口
     volumes:                                                    # 挂载卷，格式为 主机目录:容器目录 ≈ docker run -v
       - ./mysql-personalServerData:/var/lib/mysql               # 这里使用相对路径，注意: 实际运行总是相对docker-compose.yml路径而不是终端所在目录  
     restart: unless-stopped                                     # 重启策略，除非停止
