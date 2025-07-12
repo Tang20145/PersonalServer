@@ -40,6 +40,8 @@ Personal Server 💽
 - `docs`：文档目录（目前没东西，说实话没想好需要写什么
 - `extern`：依赖目录
  - `cpp-httplib`：cpp-httplib库，用于实现http服务
+ - `mysql-connector-c++`：mysql连接库
+ - `json`：json库
 - `modules`：不同程序的目录
 - `scripts`：脚本目录，用于存储一些快捷远程部署之类的脚本（因为我在虚拟机上开发，远程部署到服务器上
 
@@ -48,3 +50,5 @@ Personal Server 💽
     - [ ] 数据库写入（需要验证一个密码，保证外人不可破坏我的数据库，但是其实还有别的被攻击的风险对吧？不过大概率没人攻击我
 - [ ] 评论功能
 - [ ] 界面美化
+- [ ] 音乐播放器
+- [ ] 个人博客系统（直接支持Markdown上传？

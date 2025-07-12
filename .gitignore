@@ -1,5 +1,4 @@
 build/
 scripts/deploy/
 docker/mysql-personalServerData
-docker/docker-compose.yml
 *.log
