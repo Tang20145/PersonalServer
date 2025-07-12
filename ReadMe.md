@@ -13,7 +13,7 @@ Personal Server 💽
 
 
 
-**目录结构：**
+# 目录结构
 ```
  .
  ├── build
@@ -28,24 +28,61 @@ Personal Server 💽
  │   └── cpp-httplib
  ├── modules
  └── scripts
+
+ .
+├── build
+├── CMakeLists.txt
+├── dist
+│   ├── PersonalServer
+│   ├── TestJson
+│   ├── TestMySQLConnector
+│   └── TestServer
+├── docker
+│   ├── docker-compose.yml
+│   └── mysql-personalServerData
+├── extern
+│   ├── cpp-httplib
+│   ├── json
+│   └── mysql-connector-c++
+├── LICENSE
+├── modules
+│   ├── CMakeLists.txt
+│   ├── PersonalServer
+│   ├── TestJson
+│   ├── TestMySQLConnector
+│   └── TestServer
+├── Note.md
+├── ReadMe.md
+└── scripts
+    └── PersonalServerDeploy.sh
 ```
 
 - `build`: cmake目录，在此目录执行`cmake ..`进行cmake配置(我用`.gitignore`隐藏掉了)
+
+- `CMakeLists.txt`：根CMake文件
+
 - `dist`：运行程序以及依赖环境输出目录，可以将模块从此直接复制用于打包部署
- - `PersonalServer`：主程序目录
- - `TestServer`：测试程序目录
+- `PersonalServer`：主程序目录
+- `TestServer`：测试程序目录
+- `TestJson`：测试Json库目录
+- `TestMySQLConnector`：测试mysql连接库目录
+
 - `docker`：有关docker部署内容目录
  - `mysql-personalServerData`：我的docker mysql数据映射目录
  - `docker-compose.yml`：mysql容器配置文件，我这里写了一个修改过密码值的参考文件而非真实文件
+
 - `docs`：文档目录（目前没东西，说实话没想好需要写什么
+
 - `extern`：依赖目录
  - `cpp-httplib`：cpp-httplib库，用于实现http服务
  - `mysql-connector-c++`：mysql连接库
  - `json`：json库
+
 - `modules`：不同程序的目录
+
 - `scripts`：脚本目录，用于存储一些快捷远程部署之类的脚本（因为我在虚拟机上开发，远程部署到服务器上
 
-## Plan
+# Plan
 - [ ] 数据库页面（用于用于展示个人作品评价）目前计划使用 `doker`部署`MySQL` + `MySQL Connector` + `nlohmann/json` 实现
     - [ ] 数据库写入（需要验证一个密码，保证外人不可破坏我的数据库，但是其实还有别的被攻击的风险对吧？不过大概率没人攻击我
 - [ ] 评论功能
