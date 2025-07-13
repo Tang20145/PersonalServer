@@ -26,18 +26,21 @@ string getWatchListFullViewJsonString()
         l_jItem["type"] = row[4];
         // nullptr 会为什么？
         if(!row[5].isNull())
-        l_jItem["rate"] = row[5].get<int>();
+            l_jItem["rate"] = row[5].get<int>();
         l_jItem["status"] = row[6];
 
         if (!row[7].isNull())
             l_jItem["start_time"] = row[7];
         if (!row[8].isNull())
             l_jItem["finish_time"] = row[8];
+        else
+            l_jItem["finish_time"].clear();
         if (!row[9].isNull())
             l_jItem["comment"] = row[9];
         if (!row[10].isNull())
             l_jItem["link"] = row[10];
-
+        else
+            l_jItem["link"].clear();
         // 处理以逗号 ',' 为分隔的标签字段，转为vector
         {
             mysqlx::string l_sTagStr = row[3];

@@ -20,6 +20,9 @@ int main()
         res.set_file_content("view/watchList.html");
         });
 
+    // css 文件
+    svr.set_mount_point("/css","./css");
+
     
     // 动态资源
     // 观影列表

@@ -1,0 +1,23 @@
+/* 表头固定 + 背景色 */
+#mediaTable thead th {
+    position: sticky;
+    top: 0;
+    background-color: #3d6148; /* 深色背景 */
+    color: white;
+    font-weight: bold;
+    z-index: 10;
+}
+
+/* 表头文字不换行 */
+#mediaTable thead th {
+    white-space: nowrap;
+    padding: 12px 15px;
+}
+
+/* 表格整体样式 */
+#mediaTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-family: Arial, sans-serif;
+}
