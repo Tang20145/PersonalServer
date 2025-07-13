@@ -15,21 +15,7 @@ Personal Server 💽
 
 # 目录结构
 ```
- .
- ├── build
- ├── dist
- │   ├── PersonalServer
- │   └── TestServer
- ├── docker
- │   ├── mysql-personalServerData
- │   └── docker-compose.yml
- ├── docs
- ├── extern
- │   └── cpp-httplib
- ├── modules
- └── scripts
-
- .
+.
 ├── build
 ├── CMakeLists.txt
 ├── dist
