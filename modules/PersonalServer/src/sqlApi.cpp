@@ -1,17 +1,14 @@
-#include "xdevapi.h"
-#include "json.hpp"
-#include <iostream>
-#include <vector>
-#include <string>
+#include "sqlApi.h"
 
-using namespace std;
-using json = nlohmann::json;
 
-void testWatchListFullView(mysqlx::Session &l_nSess)
+// 初始化会话
+mysqlx::Session g_nSess("localhost", 33060, "root", "root", "personalServerDB");
+
+string getWatchListFullViewJsonString()
 {
     // 查询视图，需要将DATE格式化输出，不然会返回二进制类型RAW，无法转换为Json
     string l_sSql = "SELECT id,name,eng_name,tags,type,rate,status,DATE_FORMAT(start_time, \"%Y-%m-%d\") AS formatted_start_time,DATE_FORMAT(finish_time, \"%Y-%m-%d\") AS formatted_finish_time,comment,link FROM WatchListFullView";
-    mysqlx::SqlResult l_rWatchListFullView = l_nSess.sql(l_sSql).execute();
+    mysqlx::SqlResult l_rWatchListFullView = g_nSess.sql(l_sSql).execute();
 
     // json 结果
     json l_jWatchListFullView;
@@ -61,32 +58,6 @@ void testWatchListFullView(mysqlx::Session &l_nSess)
         // 加入此行
         l_jWatchListFullView.push_back(l_jItem);
     }
-    // 格式化输出
-    cout << l_jWatchListFullView.dump(4) << endl;
-}
-
-void testWatchList(mysqlx::Session &l_nSess)
-{
-    mysqlx::SqlResult l_rWatchList = l_nSess.sql("select * from WatchList").execute();
-
-    json l_jWatchList;
-
-    for (mysqlx::Row row : l_rWatchList)
-    {
-        json l_jItem;
-        l_jItem["start_time"] = row[6].getRawBytes();
-        l_jWatchList.push_back(l_jItem);
-    }
-
-    // 格式化输出
-    cout << l_jWatchList.dump(4) << endl;
-}
-
-int main()
-{
-    // 连接会话
-    mysqlx::Session l_nSess("localhost", 33060, "root", "root", "personalServerDB");
-
-    testWatchListFullView(l_nSess);
-    return 0;
+    
+    return l_jWatchListFullView.dump();
 }
