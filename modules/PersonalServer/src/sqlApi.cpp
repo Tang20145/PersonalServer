@@ -10,14 +10,14 @@ mysqlx::Session* g_nSess;
 int init()
 {
     // 读取json配置文件
-    std::fstream l_fConfig("config.json",std::ios::in);
+    std::ifstream l_fConfig("config.json");
     json l_jConfig = json::parse(l_fConfig);
 
     {
-        string host = l_jConfig["host"];
-        string username = l_jConfig["username"];
-        string password = l_jConfig["password"];
-        string databaseName = l_jConfig["databaseName"];
+        string host = l_jConfig["database"]["host"];
+        string username = l_jConfig["database"]["username"];
+        string password = l_jConfig["database"]["password"];
+        string databaseName = l_jConfig["database"]["databaseName"];
         // 初始化会话
         g_nSess = new mysqlx::Session(host, 33060, username, password, databaseName);
     }

@@ -11,4 +11,5 @@ scripts/deploy/
 docker/mysql-personalServerData
 
 # 所有可能的日志
+dist/PersonalServer/nohup.out
 *.log

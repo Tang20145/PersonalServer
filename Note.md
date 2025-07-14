@@ -105,3 +105,15 @@ docker restart mysql-container
 #3. 验证
 docker exec -it mysql-container date
 ```
+
+==Q==
+运行时报错:
+```shell
+sudo: unable to resolve host lavm-emt21wmdne
+```
+
+==A==
+在/etc/hosts文件添加下面内容，帮助识别
+```
+127.0.0.1       lavm-emt21wmdne
+```

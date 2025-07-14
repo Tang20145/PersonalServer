@@ -5,6 +5,8 @@ using namespace httplib;
 
 int main()
 {
+    sqlApi::init();
+
     Server svr;
 
     // 页面
@@ -30,6 +32,14 @@ int main()
         res.set_content(sqlApi::getWatchListFullViewJsonString(),"application/json");
         });
 
-    svr.listen("0.0.0.0",80);
+    // 绑定 ​​1024 以下的端口​​需要 root权限，故需要sudo运行
+    if(!svr.bind_to_port("0.0.0.0",80))
+    {
+        printf("bind_to_port failed\n");
+    }
+    if(!svr.listen_after_bind())
+    {
+        printf("listen_after_bind failed\n");
+    }
     
 }
