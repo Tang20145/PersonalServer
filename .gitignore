@@ -4,12 +4,13 @@
 # 生成杂项
 build/
 
-# 部署脚本
-scripts/deploy/
+
 
 # 数据
 docker/mysql-personalServerData
 
-# 所有可能的日志
+# 所有可能的日志，脚本
 dist/PersonalServer/nohup.out
+scripts/deploy/
 *.log
+*.sql
