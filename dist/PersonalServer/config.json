@@ -1,0 +1,9 @@
+{
+    "database": {
+      "host": "localhost",
+      "username": "root",
+      "password": "root",
+      "databaseName":"personalServerDB"
+    }
+}
+  

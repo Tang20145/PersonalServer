@@ -1,14 +1,33 @@
 #include "sqlApi.h"
+#include <fstream>
 
+using namespace std;
 
-// 初始化会话
-mysqlx::Session g_nSess("localhost", 33060, "root", "root", "personalServerDB");
+namespace sqlApi{
+
+mysqlx::Session* g_nSess;    
+
+int init()
+{
+    // 读取json配置文件
+    std::fstream l_fConfig("config.json",std::ios::in);
+    json l_jConfig = json::parse(l_fConfig);
+
+    {
+        string host = l_jConfig["host"];
+        string username = l_jConfig["username"];
+        string password = l_jConfig["password"];
+        string databaseName = l_jConfig["databaseName"];
+        // 初始化会话
+        g_nSess = new mysqlx::Session(host, 33060, username, password, databaseName);
+    }
+}
 
 string getWatchListFullViewJsonString()
 {
     // 查询视图，需要将DATE格式化输出，不然会返回二进制类型RAW，无法转换为Json
     string l_sSql = "SELECT id,name,eng_name,tags,type,rate,status,DATE_FORMAT(start_time, \"%Y-%m-%d\") AS formatted_start_time,DATE_FORMAT(finish_time, \"%Y-%m-%d\") AS formatted_finish_time,comment,link FROM WatchListFullView";
-    mysqlx::SqlResult l_rWatchListFullView = g_nSess.sql(l_sSql).execute();
+    mysqlx::SqlResult l_rWatchListFullView = g_nSess->sql(l_sSql).execute();
 
     // json 结果
     json l_jWatchListFullView;
@@ -64,3 +83,5 @@ string getWatchListFullViewJsonString()
     
     return l_jWatchListFullView.dump();
 }
+
+} // namespace sqlApi

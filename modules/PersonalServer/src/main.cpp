@@ -27,7 +27,7 @@ int main()
     // 动态资源
     // 观影列表
     svr.Get("/api/WatchListFullView",[](const httplib::Request &, httplib::Response &res) {
-        res.set_content(getWatchListFullViewJsonString(),"application/json");
+        res.set_content(sqlApi::getWatchListFullViewJsonString(),"application/json");
         });
 
     svr.listen("0.0.0.0",80);

@@ -6,13 +6,19 @@
 #include <string>
 using json = nlohmann::json;
 
-using namespace std;
+
 
 // sql使用会话
-extern mysqlx::Session g_nSess;
+extern mysqlx::Session* g_nSess;
 
-string getWatchListFullViewJsonString();
+// 使用命名空间防止冲突
+namespace sqlApi
+{
+    // 初始化连接会话
+    int init();
 
+    // 获取观影列表视图
+    std::string getWatchListFullViewJsonString();
 
-
+}// namespace sqlApi
 #endif
