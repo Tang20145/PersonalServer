@@ -7,6 +7,9 @@ int main()
 {
     sqlApi::init();
 
+    // sqlApi::getSqlQueryJsonString("SELECT id,name,eng_name,tags as tags_tags,type,rate,status,DATE_FORMAT(start_time, \"%Y-%m-%d\") AS start_time,DATE_FORMAT(finish_time, \"%Y-%m-%d\") AS finish_time,comment,link FROM WatchListFullView");
+    //sqlApi::getWatchListFullViewJsonString();
+
     Server svr;
 
     // 页面
@@ -29,7 +32,7 @@ int main()
     // 动态资源
     // 观影列表
     svr.Get("/api/WatchListFullView",[](const httplib::Request &, httplib::Response &res) {
-        res.set_content(sqlApi::getWatchListFullViewJsonString(),"application/json");
+        res.set_content(sqlApi::getSqlQueryJsonString("SELECT id,name,eng_name,tags as tags_tags,type,rate,status,DATE_FORMAT(start_time, \"%Y-%m-%d\") AS start_time,DATE_FORMAT(finish_time, \"%Y-%m-%d\") AS finish_time,comment,link FROM WatchListFullView"),"application/json");
         });
 
     // 绑定 ​​1024 以下的端口​​需要 root权限，故需要sudo运行
