@@ -6,6 +6,13 @@
 
 using namespace std;
 
+// 协议传入参数map
+// "sql":sql语句
+// "page":
+// "pageSize":
+// "orderDirection":asc / desc
+// "orderBy":
+
 // 防止与mysql的string产生歧义
 using string = std::string;
 
@@ -109,7 +116,7 @@ namespace sqlApi
         }
 
         // 结果
-        json l_jResJson;
+        json l_jResDataJson;
 
         // 每行
         for (mysqlx::Row row : l_rSqlResult)
@@ -166,10 +173,98 @@ namespace sqlApi
                     }
                 }
             }
-            l_jResJson.push_back(l_jItem);
+            l_jResDataJson.push_back(l_jItem);
         }
-
+        json l_jResJson;
+        l_jResJson["recordsTotal"] = l_jResDataJson.size();
+        l_jResJson["data"] = l_jResDataJson;
         return l_jResJson.dump();
     }
 
+    std::string getSqlQueryJsonString(std::unordered_map<std::string,std::string> l_mIn)
+    {
+        // 获取查询语句
+        string l_sSql = l_mIn["sql"];
+        
+
+        // 查询
+        mysqlx::SqlResult l_rSqlResult = g_nSess->sql(l_sSql).execute();
+
+        // 获取列名
+        const mysqlx::Columns &l_Columns = l_rSqlResult.getColumns();
+        std::vector<string> l_aColumnNames;
+        auto l_itColumns = l_Columns.begin();
+        while (l_itColumns != l_Columns.end())
+        {
+            l_aColumnNames.push_back(l_itColumns->getColumnLabel());
+            // 测试列名输出
+            // std::cout << l_aColumnNames.back().c_str()<< ",";
+            l_itColumns++;
+        }
+
+        // 结果
+        json l_jResDataJson;
+
+        // 每行
+        for (mysqlx::Row row : l_rSqlResult)
+        {
+            // 每行的数据json对象
+            json l_jItem;
+
+            // 每列（每个字段
+            for (int i = 0; i < l_aColumnNames.size(); i++)
+            {
+                string l_sColumnName = l_aColumnNames[i];
+                const mysqlx::Value l_Val = row[i];
+
+                // 字段为空
+                if (l_Val.isNull())
+                {
+                    l_jItem[l_sColumnName] = nullptr;
+                }
+                else // 字段不为空
+                {
+                    // 字段是逗号分隔的标签类型
+                    if (l_sColumnName.length() > strlen("_tags") && l_sColumnName.substr(l_sColumnName.length() - strlen("_tags"), strlen("_tags")) == "_tags") // 如果是标签类型
+                    {
+                        string l_sTagStr = l_Val.get<string>();
+                        vector<string> l_vTags;
+                        int l_iPos;
+                        while ((l_iPos = l_sTagStr.find(',')) != string::npos) // 当找得到分隔符，l_iPos为分隔符的索引
+                        {
+                            // 取出此段字符并删掉
+                            l_vTags.push_back(l_sTagStr.substr(0, l_iPos));
+                            l_sTagStr.erase(0, l_iPos + 1);
+                        }
+
+                        if (!l_sTagStr.empty())
+                            l_vTags.push_back(l_sTagStr);
+
+                        // 直接返回不带_tags尾缀的
+                        l_jItem[l_sColumnName.substr(0, l_sColumnName.length() - strlen("_tags"))] = l_vTags;
+                    }
+                    else // 字段为正常单个值
+                    {
+                        switch (l_Val.getType())
+                        {
+                        case mysqlx::Value::Type::INT64:
+                            l_jItem[l_sColumnName] = l_Val.get<int64_t>();
+                            break;
+                        case mysqlx::Value::Type::UINT64:
+                            l_jItem[l_sColumnName] = l_Val.get<u_int64_t>();
+                            break;
+                        default:
+                            l_jItem[l_sColumnName] = l_Val.get<string>();
+                            break;
+                        }
+                    }
+                }
+            }
+            l_jResDataJson.push_back(l_jItem);
+        }
+        json l_jResJson;
+        l_jResJson["recordsTotal"] = l_jResDataJson.size();
+        l_jResJson["data"] = l_jResDataJson;
+        return l_jResJson.dump();
+    }
 } // namespace sqlApi

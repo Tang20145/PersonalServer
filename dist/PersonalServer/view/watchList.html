@@ -39,13 +39,33 @@
 
     <!--下面这段就是javaScript-->
     <script>
+        // $(document) 选择整个文档
+        // .ready() 添加一个事件处理器，当文档准备好时执行
+        // function() { ... } 是要执行的函数
         $(document).ready(function () {
+            // $('#example') 选择 ID 为 "example" 的 HTML 元素（通常是一个 <table>）
+            // .DataTable() 在该元素上初始化 DataTables 插件
+            // { ... } 是插件的配置对象
             $('#mediaTable').DataTable({
-                // jquery的插件，将远程返回的json格式数据转为数据表
-                "ajax": {
-                    "url": "/api/WatchListFullView",//直接填这个，到时候就是请求本地的api，如果是别的才需要 域名/api/apiName
-                    "dataType": "json",
-                    "dataSrc": ""
+                // 2. 启用服务端模式
+                serverSide: true,
+                // 3. 配置AJAX请求
+                ajax: {
+                    url: '/api/WatchListFullView', // 服务器接口URL（需替换为你的实际地址）
+                    type: 'GET',
+                    data: function(d) {
+                        // 4. 将DataTables的参数转换为后端需要的格式
+                        return {
+                        draw: d.draw,         // DataTables安全校验参数（必须回传）
+                        page: Math.floor(d.start / d.length) + 1, // 计算页码（从1开始）
+                        pageSize: d.length,   // 每页条数
+                        keyword: d.search.value || '', // 搜索关键词
+                        
+                        // 可选：添加排序信息（如后端需要）
+                        sortField: d.order[0]?.column,  // 排序列索引
+                        sortDirection: d.order[0]?.dir  // asc/desc
+                        };
+                    }
                 },
                 "columns": [
                     { "data": "id",
