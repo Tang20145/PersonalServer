@@ -181,12 +181,32 @@ namespace sqlApi
         return l_jResJson.dump();
     }
 
-    std::string getSqlQueryJsonString(std::unordered_map<std::string,std::string> l_mIn)
+    std::string getSqlQueryJsonString(std::unordered_map<std::string, std::string> &l_mIn)
     {
         // 获取查询语句
         string l_sSql = l_mIn["sql"];
-        
+        if (l_sSql.empty() || l_sSql == "")
+            return "";
+        {
+            // 默认分页参数，防止返回结果过多
+            int l_iPage = 1;
+            int l_iPageSize = 10;
+            int l_iOffset = 0;
+            if(l_mIn.find("page")!=l_mIn.end())
+            {
+                // 获取页面
+                l_iPage = atoi(l_mIn["page"].c_str());
+            }
+            if(l_mIn.find("pageSize")!=l_mIn.end())
+            {
+                // 获取每页大小
+                l_iPageSize = atoi(l_mIn["pageSize"].c_str());
+            }
 
+            
+            
+
+        }
         // 查询
         mysqlx::SqlResult l_rSqlResult = g_nSess->sql(l_sSql).execute();
 
