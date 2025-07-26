@@ -181,34 +181,73 @@ namespace sqlApi
         return l_jResJson.dump();
     }
 
+    // 通用查询
+    // 暂不实现关键词查找
     std::string getSqlQueryJsonString(std::unordered_map<std::string, std::string> &l_mIn)
     {
         // 获取查询语句
-        string l_sSql = l_mIn["sql"];
-        if (l_sSql.empty() || l_sSql == "")
+        if (l_mIn.find("sql") == l_mIn.end() || l_mIn.find("countSql")==l_mIn.end())
+        {
+            printf("sql is empty\n");
             return "";
+        }
+        string l_sSql = l_mIn["sql"];
+        string l_sCountSql = l_mIn["countSql"];
+        int l_iCount = g_nSess->sql(l_sCountSql).execute().fetchOne()[0].get<int>();
+        int l_iFilterCount = l_iCount;
+
+        // 组装分页查询语句
         {
             // 默认分页参数，防止返回结果过多
             int l_iPage = 1;
             int l_iPageSize = 10;
             int l_iOffset = 0;
-            if(l_mIn.find("page")!=l_mIn.end())
+            string l_sKeyword;
+            string l_sSortField;
+            string l_sSortDirection = "asc"; // 默认增
+
+            // 排序
+            if (l_mIn.find("sortField") != l_mIn.end())
             {
-                // 获取页面
-                l_iPage = atoi(l_mIn["page"].c_str());
+                // 获取用于排序的字段
+                l_sSql += " ORDER BY " + l_mIn["sortField"];
             }
-            if(l_mIn.find("pageSize")!=l_mIn.end())
+            if (l_mIn.find("sortDirection") != l_mIn.end())
+            {
+                // 排序方向
+                l_sSortDirection = l_mIn["sortDirection"];
+            }
+            l_sSql += " " + l_sSortDirection;
+
+            // 分页
+            if (l_mIn.find("pageSize") != l_mIn.end())
             {
                 // 获取每页大小
                 l_iPageSize = atoi(l_mIn["pageSize"].c_str());
             }
+            if (l_mIn.find("page") != l_mIn.end())
+            {
+                // 获取页面
+                l_iPage = atoi(l_mIn["page"].c_str());
+                // 获取偏移
+                l_iOffset = (l_iPage - 1) * l_iPageSize;
+            }
+            l_sSql += " LIMIT " + to_string(l_iOffset) + "," + to_string(l_iPageSize);
 
-            
-            
-
+            // 查询关键字（暂不实现
+            if (l_mIn.find("keyword") != l_mIn.end())
+            {
+                // 获取查找关键词
+                l_sKeyword = l_mIn["keyword"];
+            }
         }
+
+        printf("SQL : %s\n",l_sSql.c_str());
+
         // 查询
         mysqlx::SqlResult l_rSqlResult = g_nSess->sql(l_sSql).execute();
+        // mysqlx::SqlResult l_rTotal = g_nSess->sql(l_sCountSql).execute().fetchOne()[0].get<int>();
+        // int l_iTotal = l_rTotal.fetchOne()[0].get<int>();
 
         // 获取列名
         const mysqlx::Columns &l_Columns = l_rSqlResult.getColumns();
@@ -237,18 +276,15 @@ namespace sqlApi
                 string l_sColumnName = l_aColumnNames[i];
                 const mysqlx::Value l_Val = row[i];
 
-                // 字段为空
-                if (l_Val.isNull())
+                
+                // 字段是逗号分隔的标签类型
+                if (l_sColumnName.length() > strlen("_tags") && l_sColumnName.substr(l_sColumnName.length() - strlen("_tags"), strlen("_tags")) == "_tags") // 如果是标签类型
                 {
-                    l_jItem[l_sColumnName] = nullptr;
-                }
-                else // 字段不为空
-                {
-                    // 字段是逗号分隔的标签类型
-                    if (l_sColumnName.length() > strlen("_tags") && l_sColumnName.substr(l_sColumnName.length() - strlen("_tags"), strlen("_tags")) == "_tags") // 如果是标签类型
+                    vector<string> l_vTags;
+
+                    if(!l_Val.isNull())
                     {
                         string l_sTagStr = l_Val.get<string>();
-                        vector<string> l_vTags;
                         int l_iPos;
                         while ((l_iPos = l_sTagStr.find(',')) != string::npos) // 当找得到分隔符，l_iPos为分隔符的索引
                         {
@@ -259,32 +295,41 @@ namespace sqlApi
 
                         if (!l_sTagStr.empty())
                             l_vTags.push_back(l_sTagStr);
-
-                        // 直接返回不带_tags尾缀的
-                        l_jItem[l_sColumnName.substr(0, l_sColumnName.length() - strlen("_tags"))] = l_vTags;
                     }
-                    else // 字段为正常单个值
+
+                    // 直接返回不带_tags尾缀的
+                    l_jItem[l_sColumnName.substr(0, l_sColumnName.length() - strlen("_tags"))] = l_vTags;
+                }
+                else if (l_Val.isNull())// 字段为空
+                {
+                    l_jItem[l_sColumnName] = "";//表示空
+                }
+                else // 字段不为空
+                {                 
+                    switch (l_Val.getType())
                     {
-                        switch (l_Val.getType())
-                        {
-                        case mysqlx::Value::Type::INT64:
-                            l_jItem[l_sColumnName] = l_Val.get<int64_t>();
-                            break;
-                        case mysqlx::Value::Type::UINT64:
-                            l_jItem[l_sColumnName] = l_Val.get<u_int64_t>();
-                            break;
-                        default:
-                            l_jItem[l_sColumnName] = l_Val.get<string>();
-                            break;
-                        }
+                    case mysqlx::Value::Type::INT64:
+                        l_jItem[l_sColumnName] = l_Val.get<int64_t>();
+                        break;
+                    case mysqlx::Value::Type::UINT64:
+                        l_jItem[l_sColumnName] = l_Val.get<u_int64_t>();
+                        break;
+                    default:
+                        l_jItem[l_sColumnName] = l_Val.get<string>();
+                        break;
                     }
                 }
+                // string gdbString = l_jItem.dump();
+                // cout << "json : " << gdbString << endl;
             }
             l_jResDataJson.push_back(l_jItem);
         }
         json l_jResJson;
-        l_jResJson["recordsTotal"] = l_jResDataJson.size();
+        l_jResJson["draw"] = atoi(l_mIn["draw"].c_str());
+        l_jResJson["recordsTotal"] = l_iCount;
+        l_jResJson["recordsFiltered"] = l_iCount;
         l_jResJson["data"] = l_jResDataJson;
+
         return l_jResJson.dump();
     }
 } // namespace sqlApi

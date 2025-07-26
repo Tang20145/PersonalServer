@@ -266,5 +266,3 @@ sudo: unable to resolve host lavm-emt21wmdne
 1. $(document).ready() 是 jQuery 的 DOM 就绪事件监听。
 2. DataTable() 是插件的 初始化方法，配置对象决定了表格的 数据源、交互行为和渲染方式。
 3. 服务器端模式（serverSide: true）将计算压力转移给后端，适合大规模数据。
-
-如需进一步学习，可参考 https://datatables.net/ 或实际项目案例。
