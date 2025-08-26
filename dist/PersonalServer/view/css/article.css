@@ -1,0 +1,25 @@
+html {
+    background-color: #474d4e;
+    font-family: "Comic Sans Ms", "Cascadia Code", "楷体", "Microsoft YaHei UI";
+    font-weight: bold;
+    color: #facfad;
+    line-height: 1.8;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.h {
+    font-size: 300%;
+}
+
+.intro {
+    font-size: 200%;
+}
+
+.p {
+    font-size: 150%;
+    font-weight: normal;
+}

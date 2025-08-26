@@ -1,0 +1,136 @@
+body {
+      font-family: "Comic Sans Ms", "Cascadia Code", "楷体", "Microsoft YaHei UI";
+      background-color: #474d4e;
+}
+
+div,p,a {
+      color: #facfad;
+      line-height: 1.7;
+}
+
+p {
+      margin: 0 0;
+}
+
+.shadow-box {
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); 
+}
+
+img {
+      object-fit: cover; 
+}
+
+.container {
+      max-width: 1000px;
+      margin: 0 auto;
+      margin-bottom: 20px;
+}
+
+.row {
+      display: flex;
+      flex-direction: row;
+      justify-content: left;
+      /*让子元素依据row进行left、right边界对齐*/                  
+      position: relative; 
+}
+
+.h {
+      font-weight: bolder;
+      background-color: black;
+}
+
+/* 1号标题 */
+.h1 {
+      font-size: 180%;
+}
+
+.h2 {
+      font-size: 150%;
+}
+
+/* 左标题 */
+.lh {
+      text-align: left;
+      left: 1%;
+}
+/* 右标题 */
+.rh {
+      position: absolute;
+      right: 1%;
+}
+
+.img-wrapper {
+      position: relative;
+      width: 100%;
+      height: auto;
+}
+
+.gallery {
+      width: 100%;
+      display: flex;
+      flex-direction: left;
+      overflow: hidden;
+}
+
+.gallery-item {
+      position: relative;
+      margin: 0 10px;
+      width: 500px;
+      aspect-ratio: 16/9;
+      padding: 0 0;
+      background-color: rgb(45, 44, 44);
+      border-radius: 15px;
+}
+
+.gallery-item img {
+      width:100%;
+      object-fit: contain;
+      border-radius:inherit;
+      display: block;
+}
+
+.gallery-item .text {
+      font-size:12px;
+      text-align: center;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+      margin: 5px 0;
+}
+
+
+#header {
+      margin:0 auto;
+}
+
+#first-background {
+      width: 100%;
+      height: 74%;
+      border-bottom-left-radius: 15px; 
+      border-bottom-right-radius: 15px;
+}
+
+#avatar {
+      position: absolute;
+      height: 40%;
+      border-radius: 45%;
+      left: 10%; 
+      bottom: -20%;
+      border: 5px solid #f5ac72; 
+}
+
+#first-title {
+      position:absolute;
+      text-align: center;
+      font-size: 250%;
+      font-weight: bolder;
+      color:#faceada6;
+      right: 10%;
+      bottom: 3%;
+}
+
+#head-text {
+      margin: 10px 0px;
+      text-align: left;
+      position: absolute;
+      left:40%;
+      right:5%;
+}
