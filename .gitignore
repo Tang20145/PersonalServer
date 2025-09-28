@@ -2,9 +2,7 @@
 .vscode/
 
 # 生成杂项
-build/
-
-
+build/*
 
 # 数据
 docker/mysql-personalServerData
