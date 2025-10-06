@@ -7,9 +7,12 @@ Personal Server 💽
 
 
 
-> 本项目使用语言：`C++`
-> 开发环境配置：`CMake`+`G++`
-> 使用第三方开源库 [cpp-httplib](https://github.com/yhirose/cpp-httplib) 实现HTTP服务
+> 本项目使用语言：`C++` \
+> 开发环境配置：`CMake`+`G++`\
+> 使用第三方开源库:
+> >[cpp-httplib](https://github.com/yhirose/cpp-httplib) 实现HTTP服务\
+[json](https://json.nlohmann.me/) 实现json\
+[mysql-connector-C++](https://dev.mysql.com/downloads/connector/cpp/) 实现mysql数据库操作
 
 
 
@@ -67,6 +70,16 @@ Personal Server 💽
 - `modules`：不同程序的目录
 
 - `scripts`：脚本目录，用于存储一些快捷远程部署之类的脚本（因为我在虚拟机上开发，远程部署到服务器上
+
+## PersonalServer
+
+### 数据库查询功能
+
+路由接收参数：
+- page 页码
+- pageSize 每页数据项数量
+- 其他筛选参数
+
 
 # 运行
 

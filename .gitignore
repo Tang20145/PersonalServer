@@ -12,3 +12,6 @@ dist/PersonalServer/nohup.out
 scripts/deploy/
 *.log
 *.sql
+
+# 配置文件
+dist/PersonalServer/config.json
