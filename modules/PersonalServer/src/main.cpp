@@ -10,11 +10,11 @@ int main()
 {
     sqlApi::init();
 
-    // 测试一下查询数据
-    {
-        std::string l_strOut;
-        sqlApi::iGetWatchListFullView(l_strOut,2,10);
-    }
+    // // 测试一下查询数据
+    // {
+    //     std::string l_strOut;
+    //     sqlApi::iGetWatchListFullView(l_strOut,2,10);
+    // }
 
     Server svr;
 
@@ -24,6 +24,22 @@ int main()
             { res.set_file_content("view/profile.html"); });
     // 其他文件，view目录保存所有的html文件和css文件
     svr.set_mount_point("/", "view");
+
+    // 先实现WatchList
+    svr.Get("/WatchList", [](const httplib::Request &l_Req, httplib::Response &res)
+            {
+        std::string l_strPage = l_Req.get_param_value(SQL_PAGE);
+        std::string l_strPageSize = l_Req.get_param_value(SQL_PAGE_SIZE);
+        
+        std::string l_strResponseJson;
+        int l_iRet = sqlApi::iGetWatchListFullView(l_strResponseJson,std::stoi(l_strPage),std::stoi(l_strPageSize));
+        if(l_iRet==0)
+        {
+            res.set_content(l_strResponseJson,"application/json");
+            res.status = httplib::OK_200;
+
+            printf("[%s]%d: %s\n",__FILE__,__LINE__,l_strResponseJson.c_str());
+        } });
 
     // dataAPI路径标识查询数据库接口，定义/dataAPI的Get路由，Request 会存储用户发送的参数
     svr.Get("/dataAPI", [](const httplib::Request &l_Req, httplib::Response &res)
@@ -63,8 +79,7 @@ int main()
                 std::string l_strSql = "select name,type,rate from " +
                                        l_strTableName +
                                        " LIMIT " + std::to_string(l_iPageSize) +
-                                       " OFFSET " + std::to_string(l_iOffset);
-            });
+                                       " OFFSET " + std::to_string(l_iOffset); });
 
     // 绑定 ​​1024 以下的端口​​需要 root权限，故需要sudo运行
     if (!svr.bind_to_port("0.0.0.0", 80))

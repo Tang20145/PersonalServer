@@ -132,74 +132,76 @@ namespace sqlApi
         try
         {
 
+        
+            int l_iTotalCount = 0;
+            int l_iTotalPages = 0;
+            // 获取总数据数量
+            mysqlx::SqlResult l_SqlCountResult = g_nSess->sql(std::string("SELECT COUNT(*) from ") + MYSQL_TABLE_NAME_WATCH_LIST_FULL_VIEW).execute();
+
+            mysqlx::Row l_Row = l_SqlCountResult.fetchOne();
+            l_iTotalCount = int(l_Row[0]);
+            l_iTotalPages = (l_iTotalCount + l_iPageSize - 1) / l_iPageSize;
+
+            // 根据实际数据量调整offset
+            if (l_iPage > l_iTotalPages)
             {
-                int l_iTotalCount = 0;
-                int l_iTotalPages = 0;
-                // 获取总数据数量
-                mysqlx::SqlResult l_SqlResult = g_nSess->sql(std::string("SELECT COUNT(*) from ") + MYSQL_TABLE_NAME_WATCH_LIST_FULL_VIEW).execute();
-
-                mysqlx::Row l_Row = l_SqlResult.fetchOne();
-                l_iTotalCount = int(l_Row[0]);
-                l_iTotalPages = (l_iTotalCount + l_iPageSize - 1) / l_iPageSize;
-
-                // 根据实际数据量调整offset
-                if (l_iPage > l_iTotalPages)
-                {
-                    l_iPage = l_iTotalPages;
-                    l_iOffset = (l_iPage - 1) * l_iPageSize;
-                }
+                l_iPage = l_iTotalPages;
+                l_iOffset = (l_iPage - 1) * l_iPageSize;
             }
+        
 
             // 获取实际分页数据
+        
+            std::stringstream l_ssSql;
+            l_ssSql << "SELECT id,name,eng_name,tags,type,rate,status,"
+                    <<"DATE_FORMAT(start_time, '%Y-%m-%d') as start_time,"
+                    <<"DATE_FORMAT(finish_time, '%Y-%m-%d') as finish_time from "
+                    << MYSQL_TABLE_NAME_WATCH_LIST_FULL_VIEW
+                    << " LIMIT "
+                    << l_iPageSize
+                    << " OFFSET "
+                    << l_iOffset;
+
+            mysqlx::SqlResult l_SqlResult = g_nSess->sql(l_ssSql.str()).execute();
+
+            mysqlx::Row l_CurRow;
+            json l_jResult;
+            std::vector<json> l_vecJsonResult;
+            l_vecJsonResult.reserve(l_SqlResult.count());
+            while ((l_CurRow = l_SqlResult.fetchOne())) // 遍历所有结果，封装成json
             {
-                std::stringstream l_ssSql;
-                l_ssSql << "SELECT id,name,eng_name,tags,type,rate,status,"
-                        <<"DATE_FORMAT(start_time, '%Y-%m-%d') as start_time,"
-                        <<"DATE_FORMAT(finish_time, '%Y-%m-%d') as finish_time from "
-                        << MYSQL_TABLE_NAME_WATCH_LIST_FULL_VIEW
-                        << " LIMIT "
-                        << l_iPageSize
-                        << " OFFSET "
-                        << l_iOffset;
-                std::cout << "sql execute : " << l_ssSql.str() << std::endl;
+                json l_jItem;
 
-                mysqlx::SqlResult l_SqlResult = g_nSess->sql(l_ssSql.str()).execute();
-
-                mysqlx::Row l_CurRow;
-                json l_jResult;
-                std::vector<json> l_vecJsonResult;
-                l_vecJsonResult.reserve(l_SqlResult.count());
-                while ((l_CurRow = l_SqlResult.fetchOne())) // 遍历所有结果，封装成json
+                l_jItem["id"] = int(l_CurRow[0]);
+                l_jItem["name"] = string(l_CurRow[1].isNull() ? "null" : l_CurRow[1]);
+                l_jItem["eng_name"] = string(l_CurRow[2].isNull() ? "null" : l_CurRow[2]);
+                // tags
                 {
-                    json l_jItem;
-
-                    l_jItem["id"] = int(l_CurRow[0]);
-                    l_jItem["name"] = string(l_CurRow[1].isNull() ? "null" : l_CurRow[1]);
-                    l_jItem["eng_name"] = string(l_CurRow[2].isNull() ? "null" : l_CurRow[2]);
-                    // tags
+                    l_jItem["tags"] = json::array();
+                    if (!l_CurRow[3].isNull())
                     {
-                        l_jItem["tags"] = json::array();
-                        if (!l_CurRow[3].isNull())
-                        {
-                            string l_strTags = string(l_CurRow[3]);
-                            vector<string> l_vecStrTags = commonUse::vecStrGetArraySplitBy(l_strTags.c_str(), ',');
-                            l_jItem["tags"] = l_vecStrTags;
-                            // for(auto s : l_vecStrTags){
-                            //     l_jItem["tags"].push_back(s);
-                            // }
-                        }
+                        string l_strTags = string(l_CurRow[3]);
+                        vector<string> l_vecStrTags = commonUse::vecStrGetArraySplitBy(l_strTags.c_str(), ',');
+                        l_jItem["tags"] = l_vecStrTags;
+                        // for(auto s : l_vecStrTags){
+                        //     l_jItem["tags"].push_back(s);
+                        // }
                     }
-                    l_jItem["type"] = string(l_CurRow[4].isNull() ? "null" : l_CurRow[4]);
-                    l_jItem["rate"] = int(l_CurRow[5].isNull() ? "null" : l_CurRow[5]);
-                    l_jItem["status"] = string(l_CurRow[6].isNull() ? "null" : l_CurRow[6]);
-                    l_jItem["start_time"] = string(l_CurRow[7].isNull() ? "null" : l_CurRow[7]);
-                    l_jItem["finish_time"] = string(l_CurRow[8].isNull() ? "null" : l_CurRow[8]);
-
-                    l_vecJsonResult.push_back(l_jItem);
                 }
-                l_jResult = l_vecJsonResult;
-                std::cout << "sql result : " << l_jResult.dump() << std::endl;
+                l_jItem["type"] = string(l_CurRow[4].isNull() ? "null" : l_CurRow[4]);
+                l_jItem["rate"] = l_CurRow[5].isNull() ? -1 : int(l_CurRow[5]);
+                l_jItem["status"] = string(l_CurRow[6].isNull() ? "null" : l_CurRow[6]);
+                l_jItem["start_time"] = string(l_CurRow[7].isNull() ? "null" : l_CurRow[7]);
+                l_jItem["finish_time"] = string(l_CurRow[8].isNull() ? "null" : l_CurRow[8]);
+
+                l_vecJsonResult.push_back(l_jItem);
             }
+            l_jResult["data"] = l_vecJsonResult;
+            l_jResult["totalPage"] = l_iTotalPages;
+            l_jResult["page"] = l_iPage;
+            // std::cout << "sql result : " << l_jResult.dump() << std::endl;
+            p_strWatchListOutJson = l_jResult.dump();
+            
         }
         catch (const mysqlx::Error &err)
         {
@@ -230,7 +232,7 @@ namespace sqlApi
         // {
         //     std::cerr << e.what() << '\n';
         // }
-
+        
         return 0;
     }
 
