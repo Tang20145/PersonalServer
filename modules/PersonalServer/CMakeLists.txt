@@ -8,6 +8,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
+target_compile_definitions(${PROJECT_NAME}
+    PRIVATE SPDLOG_DEBUG_ON
+)
+
 target_link_libraries(${PROJECT_NAME} pthread mysqlcppconnx)
 
 # 可执行文件目录位置设定

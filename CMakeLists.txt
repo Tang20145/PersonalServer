@@ -21,7 +21,8 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/dist)
 # 全局include目录
 include_directories(${CMAKE_SOURCE_DIR}/extern/cpp-httplib
                     ${CMAKE_SOURCE_DIR}/extern/mysql-connector-c++/include/mysqlx
-                    ${CMAKE_SOURCE_DIR}/extern/json)
+                    ${CMAKE_SOURCE_DIR}/extern/json
+                    ${CMAKE_SOURCE_DIR}/extern/spdlog/include)
 
 # 全局链接库目录
 link_directories("${CMAKE_SOURCE_DIR}/extern/usr/lib/x86 64-linux-gnu"

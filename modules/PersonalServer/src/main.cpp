@@ -1,5 +1,6 @@
 #include "httplib.h"
 #include "sqlApi.h"
+#include "jcLog.h"
 
 using namespace httplib;
 
@@ -8,8 +9,11 @@ void print(const httplib::Request &l_rRequst);
 
 int main()
 {
+    SPDLOG_DEBUG("start sql");
+
     sqlApi::init();
 
+    SPDLOG_DEBUG("end sql");
     // // 测试一下查询数据
     // {
     //     std::string l_strOut;
