@@ -12,8 +12,8 @@ Personal Server 💽
 > 使用第三方开源库:
 > >[cpp-httplib](https://github.com/yhirose/cpp-httplib) 实现HTTP服务\
 [json](https://json.nlohmann.me/) 实现json\
-[mysql-connector-C++](https://dev.mysql.com/downloads/connector/cpp/) 实现mysql数据库操作
-
+[mysql-connector-C++](https://dev.mysql.com/downloads/connector/cpp/) 实现mysql数据库操作\
+[spdlog](https://github.com/gabime/spdlog)实现日志功能
 
 
 # 目录结构
