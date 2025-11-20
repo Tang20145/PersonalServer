@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 #include "commonUse.h"
+// 日志库封装
+#include "jcLog.h"
 
 using namespace std;
 
@@ -42,8 +44,10 @@ namespace sqlApi
             }
             try
             {
+                SQL_LOG->debug("[{}]{} start connect mysql Server using host:{} port:{} username:{} password:{} databaseName:{}",__FUNCTION__,__LINE__,host,33060,username,password,databaseName);
                 g_nSess = new mysqlx::Session(host, 33060, username, password, databaseName);
-                std::cout << "init session success!\n";
+                SQL_LOG->debug("[{}]{} init session success!",__FUNCTION__,__LINE__);
+                // std::cout << "init session success!\n";
             }
             catch (const mysqlx::Error &e)
             {
@@ -200,7 +204,9 @@ namespace sqlApi
             l_jResult["totalPage"] = l_iTotalPages;
             l_jResult["page"] = l_iPage;
             // std::cout << "sql result : " << l_jResult.dump() << std::endl;
+
             p_strWatchListOutJson = l_jResult.dump();
+            SQL_LOG->debug("[{}]{} get result:{}",__FUNCTION__,__LINE__,p_strWatchListOutJson);
             
         }
         catch (const mysqlx::Error &err)

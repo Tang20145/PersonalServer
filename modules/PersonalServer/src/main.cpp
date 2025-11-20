@@ -4,16 +4,19 @@
 
 using namespace httplib;
 
-// 收到的请求
-void print(const httplib::Request &l_rRequst);
+// 初始化日志
+void vInitLog();
+
 
 int main()
 {
-    SPDLOG_DEBUG("start sql");
+    vInitLog();
+    jcLog::vStartFlushing(jcLog::g_vLoggerManager,std::chrono::seconds(1));//一秒flush
 
+    MAIN_LOG->info("[{}]{} start init Sql",__FUNCTION__,__LINE__);
     sqlApi::init();
+    MAIN_LOG->info("[{}]{} end init Sql",__FUNCTION__,__LINE__);    
 
-    SPDLOG_DEBUG("end sql");
     // // 测试一下查询数据
     // {
     //     std::string l_strOut;
@@ -101,15 +104,17 @@ int main()
     }
 }
 
-void print(const httplib::Request &l_rRequst)
+void vInitLog()
 {
-    // 遍历头
-    {
-        httplib::Headers l_headers = l_rRequst.headers;
-        auto it = l_headers.begin();
-        for (; it != l_headers.end(); it++)
-        {
-            printf("%s : %s", (it->first).c_str(), it->second.c_str());
-        }
-    }
+    jcLog::vJcLogInitAsyncLogger(MAIN_LOG,"Main","log/main.log");
+    jcLog::vJcLogInitAsyncLogger(SQL_LOG,"SQL","log/sql.log");
+
+    MAIN_LOG->set_level(spdlog::level::debug);
+    SQL_LOG->set_level(spdlog::level::debug);
 }
+
+
+
+
+
+
