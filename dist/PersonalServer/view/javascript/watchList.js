@@ -1,5 +1,7 @@
 // 固定每页限制，必须与 C++ 后端的 DEFAULT_LIMIT 保持一致
 const SQL_LIMIT_DEFAULT = 20; 
+// 存储原始行数据，用于取消编辑时恢复
+const g_OriginalRowData = new Map();
 
 // 异步函数，用于根据页码获取数据
 async function fetchData(page = 1,pageSize = SQL_LIMIT_DEFAULT) {
@@ -42,6 +44,7 @@ async function fetchData(page = 1,pageSize = SQL_LIMIT_DEFAULT) {
             const row = tableBody.insertRow(); 
             
             // 2. 插入单元格 (<td>)，这是JavaScript 针对表格设计的 DOM (Document Object Model) 操作方法：
+            row.id =`row-${item.id}`;// 这里赋值的是row这个DOM的id属性，不是成员对象
             row.insertCell().textContent = item.id; 
             row.insertCell().textContent = item.name;
             row.insertCell().textContent = item.eng_name;
@@ -50,6 +53,8 @@ async function fetchData(page = 1,pageSize = SQL_LIMIT_DEFAULT) {
             row.insertCell().textContent = item.rate;
             row.insertCell().textContent = item.start_time;
             row.insertCell().textContent = item.finish_time;
+            // 新增操作列
+            const actionCell = row.insertCell();
         });
     renderPagination(jsonResponse.page,jsonResponse.totalPage);
     }
@@ -94,4 +99,90 @@ function renderPagination(currentPage, totalPages) {
         controls.appendChild(span);
     }
     console.log('end renderPagination');
+}
+
+// 切换编辑/只读模式
+function toggleEdit(id) {
+    const row = document.getElementById(`row-${id}`);
+    // 取得除 ID 列和 Actions 列外的所有数据单元格
+    // row.cells 是一个类数组对象，所以我们用 Array.from() 转换它
+    const editableCells = Array.from(row.cells).slice(1, -1); // 从第二个单元格开始，到倒数第二个结束
+
+    if (row.classList.contains('editing')) {
+        // 当前为编辑模式，切换回只读模式
+        editableCells.forEach(cell => cell.contentEditable = 'false');
+        row.classList.remove('editing');
+        // 替换按钮为 Edit
+        row.cells[row.cells.length - 1].innerHTML = `<button onclick="toggleEdit(${id})">编辑</button>`;
+    } else {
+    // 当前为只读模式，切换到编辑模式
+    // ** 存储原始数据 **
+    const originalData = editableCells.map(cell => cell.textContent);
+    originalRowData.set(id, originalData);
+
+    // 设置单元格为可编辑
+    editableCells.forEach(cell => cell.contentEditable = 'true');
+    row.classList.add('editing'); // 可用于CSS来突出显示正在编辑的行
+    // 替换按钮为 Save 和 Cancel
+    row.cells[row.cells.length - 1].innerHTML = `
+        <button onclick="handleSave(${id})">保存</button>
+        <button onclick="handleCancel(${id})">取消</button>
+    `;
+    }
+}
+    
+// 取消修改
+function handleCancel(id) {
+    const row = document.getElementById(`row-${id}`);
+    const editableCells = Array.from(row.cells).slice(1, -1);
+    const originalData = originalRowData.get(id);
+    
+    if (originalData) {
+        // 恢复单元格内容
+        editableCells.forEach((cell, index) => {
+        cell.textContent = originalData[index];
+        });
+        originalRowData.delete(id); // 清除存储的原始数据
+    }
+    
+    // 切换回只读模式
+    toggleEdit(id);
+}
+    
+// 保存数据到后端
+async function handleSave(id) {
+    const row = document.getElementById(`row-${id}`);
+    const editableCells = Array.from(row.cells).slice(1, -1);
+
+     // 获取新的数据值
+    const newData = {
+    id: id, // 传回 ID
+    name: editableCells[0].textContent,
+    eng_name: editableCells[1].textContent,
+    tags: editableCells[2].textContent.split(',').map(tag => tag.trim()), // 再次分割 tags
+    type: editableCells[3].textContent,
+    rate: parseFloat(editableCells[4].textContent), // 转换为数字类型
+    start_time: editableCells[5].textContent,
+    finish_time: editableCells[6].textContent,
+    };
+
+     // 1. 发送 PUT 请求 (更新数据常用 PUT/PATCH)
+    const response = await fetch(`/WatchList/${id}`, { // 假设后端使用 RESTful 路径：/WatchList/101
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newData), // 将 JS 对象转换为 JSON 字符串发送
+    });
+    
+    if (response.ok) {
+        console.log(`ID ${id} 数据保存成功`);
+        originalRowData.delete(id); // 保存成功，清除原始数据
+        toggleEdit(id); // 切换回只读模式
+    
+        // 最佳实践：保存后可以考虑重新加载当前页的数据，确保数据完全同步
+        // 但为节省时间，我们只做模式切换。
+    } else {
+        alert('保存失败，请检查后端服务或数据格式');
+    }
 }

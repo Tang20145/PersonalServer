@@ -1,6 +1,9 @@
 # 校验构建目录是否在项目内
 if(NOT "${CMAKE_BINARY_DIR}" MATCHES "${CMAKE_SOURCE_DIR}/build")
-  message(FATAL_ERROR "禁止在项目外部构建！请在项目内创建build目录后进入build执行cmake。")
+  message(FATAL_ERROR "禁止在项目外部构建
+  你所在的目录：${CMAKE_BINARY_DIR}
+  请在${CMAKE_SOURCE_DIR}/build执行cmake。
+  如果你并不在${CMAKE_BINARY_DIR}进行构建，请检查${CMAKE_BINARY_DIR}目录下是否有CMakeCache.txt和CMakeFiles，把他们删除")
 endif()
 
 # 基本配置 =========================================
