@@ -2,6 +2,9 @@
 #include "sqlApi.h"
 #include "jcLog.h"
 
+// 错误码
+#include "jcErrCode.h"
+
 using namespace httplib;
 
 // 初始化日志
@@ -42,12 +45,15 @@ int main()
 
         std::string l_strResponseJson;
         int l_iRet = sqlApi::iGetWatchListFullView(l_strResponseJson,std::stoi(l_strPage),std::stoi(l_strPageSize));
-        if(l_iRet==0)
+        if(l_iRet==JC_ERR_CODE_OK)
         {
             res.set_content(l_strResponseJson,"application/json");
             res.status = httplib::OK_200;
-
-            printf("[%s]%d: %s\n",__FILE__,__LINE__,l_strResponseJson.c_str());
+            SPDLOG_LOGGER_INFO(MAIN_LOG,"iGetWatchListFullView Ok");
+        }
+        else
+        {
+            SPDLOG_LOGGER_ERROR(MAIN_LOG,"iGetWatchListFullView Fail:{}",l_iRet);
         } });
 
     // dataAPI路径标识查询数据库接口，定义/dataAPI的Get路由，Request 会存储用户发送的参数
@@ -97,12 +103,15 @@ int main()
     }
     // 启用端口重用
     SocketOptions opts = [](socket_t sock)
-    {int opt = 1;setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)); };
+    {
+        int opt = 1;
+        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    };
     svr.set_socket_options(opts);
     // 监听
     if (!svr.listen_after_bind())
     {
-        printf("listen_after_bind failed\n");
+        SPDLOG_LOGGER_ERROR(MAIN_LOG,"listen_after_bind failed");
     }
 }
 
@@ -120,8 +129,11 @@ void vInitLog()
     jcLog::vJcLogInitAsyncLogger(MAIN_LOG,"Main","log/main.log");
     jcLog::vJcLogInitAsyncLogger(SQL_LOG,"SQL","log/sql.log");
 
-    MAIN_LOG->set_level(spdlog::level::debug);
-    SQL_LOG->set_level(spdlog::level::debug);
+    // 确保全局设置也允许 TRACE 级别的日志通过
+    spdlog::set_level(spdlog::level::trace);
+
+    MAIN_LOG->set_level(spdlog::level::trace);
+    SQL_LOG->set_level(spdlog::level::trace);
 }
 
 

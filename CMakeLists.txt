@@ -18,6 +18,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # 生成compile_commands.json，文件，方便编辑器识别
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# 可调试
+set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0" CACHE STRING "Flags used for debug build.") 
+set(CMAKE_C_FLAGS_DEBUG "-g -O0" CACHE STRING "Flags used for debug build.")
+
 # 创建dist目录，用于最终打包
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/dist)
 

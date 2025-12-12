@@ -1,3 +1,6 @@
+// 避免编译过滤TRACE
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
+
 #include <iostream>
 #include "spdlog/spdlog.h"
 #include "spdlog/async.h" //support for async logging.

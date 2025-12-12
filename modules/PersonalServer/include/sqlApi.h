@@ -17,6 +17,7 @@ using json = nlohmann::json;
 #define MYSQL_TABLE_NAME_WATCH_LIST_FULL_VIEW "WatchListFullView"
 // #define MYSQL_TABLE_WATCH_LIST_FULL_VIEW_COL_ID "id"
 
+
 // sql使用会话
 extern mysqlx::Session* g_nSess;// 声明会话
 

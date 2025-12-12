@@ -6,6 +6,8 @@
 #include "commonUse.h"
 // 日志库封装
 #include "jcLog.h"
+// 错误码
+#include "jcErrCode.h"
 
 using namespace std;
 
@@ -24,6 +26,7 @@ namespace sqlApi
 
     mysqlx::Session *g_nSess = nullptr; // 定义会话
 
+    // 初始化
     int init()
     {
         // 读取json配置文件
@@ -123,9 +126,10 @@ namespace sqlApi
 
     int iGetWatchListFullView(std::string &p_strWatchListOutJson, int l_iPage, int l_iPageSize)
     {
+        SPDLOG_LOGGER_TRACE(SQL_LOG,"Start");
         // 求总页数
         if (g_nSess == nullptr)
-            return -1;
+            return JC_ERR_CODE_SQL_CONNECTION;
 
         int l_iOffset = 0;
         if (l_iPage < 1)
@@ -137,8 +141,6 @@ namespace sqlApi
         // 执行sql语句查询
         try
         {
-
-        
             int l_iTotalCount = 0;
             int l_iTotalPages = 0;
             // 获取总数据数量
@@ -157,9 +159,9 @@ namespace sqlApi
         
 
             // 获取实际分页数据
-        
+            SPDLOG_LOGGER_TRACE(SQL_LOG,"trace");
             std::stringstream l_ssSql;
-            l_ssSql << "SELECT id,name,eng_name,tags,type,rate,status,"
+            l_ssSql << "SELECT id,name,eng_name,tags,type,rate,status,year,"
                     <<"DATE_FORMAT(start_time, '%Y-%m-%d') as start_time,"
                     <<"DATE_FORMAT(finish_time, '%Y-%m-%d') as finish_time from "
                     << MYSQL_TABLE_NAME_WATCH_LIST_FULL_VIEW
@@ -167,7 +169,7 @@ namespace sqlApi
                     << l_iPageSize
                     << " OFFSET "
                     << l_iOffset;
-
+            SPDLOG_LOGGER_TRACE(SQL_LOG,"trace");
             mysqlx::SqlResult l_SqlResult = g_nSess->sql(l_ssSql.str()).execute();
 
             mysqlx::Row l_CurRow;
@@ -181,6 +183,7 @@ namespace sqlApi
                 l_jItem["id"] = int(l_CurRow[0]);
                 l_jItem["name"] = string(l_CurRow[1].isNull() ? "null" : l_CurRow[1]);
                 l_jItem["eng_name"] = string(l_CurRow[2].isNull() ? "null" : l_CurRow[2]);
+                
                 // tags
                 {
                     l_jItem["tags"] = json::array();
@@ -189,59 +192,41 @@ namespace sqlApi
                         string l_strTags = string(l_CurRow[3]);
                         vector<string> l_vecStrTags = commonUse::vecStrGetArraySplitBy(l_strTags.c_str(), ',');
                         l_jItem["tags"] = l_vecStrTags;
-                        // for(auto s : l_vecStrTags){
-                        //     l_jItem["tags"].push_back(s);
-                        // }
                     }
                 }
+                SPDLOG_LOGGER_TRACE(SQL_LOG,"trace");
                 l_jItem["type"] = string(l_CurRow[4].isNull() ? "null" : l_CurRow[4]);
                 l_jItem["rate"] = l_CurRow[5].isNull() ? -1 : int(l_CurRow[5]);
                 l_jItem["status"] = string(l_CurRow[6].isNull() ? "null" : l_CurRow[6]);
                 l_jItem["start_time"] = string(l_CurRow[7].isNull() ? "null" : l_CurRow[7]);
                 l_jItem["finish_time"] = string(l_CurRow[8].isNull() ? "null" : l_CurRow[8]);
-
+                
+                l_jItem["year"] = string(l_CurRow[11].isNull() ? "null" : l_CurRow[11]);
+                SPDLOG_LOGGER_TRACE(SQL_LOG,"trace");
                 l_vecJsonResult.push_back(l_jItem);
             }
             l_jResult["data"] = l_vecJsonResult;
             l_jResult["totalPage"] = l_iTotalPages;
             l_jResult["page"] = l_iPage;
-            // std::cout << "sql result : " << l_jResult.dump() << std::endl;
-
+            
+            SPDLOG_LOGGER_TRACE(SQL_LOG,"trace");
             p_strWatchListOutJson = l_jResult.dump();
+            SPDLOG_LOGGER_TRACE(SQL_LOG,"trace");
             SPDLOG_LOGGER_INFO(SQL_LOG,"get result:{}",p_strWatchListOutJson);
             
         }
         catch (const mysqlx::Error &err)
         {
-            std::cerr << "MySQL SQL Error: " << err.what() << std::endl;
+            SPDLOG_LOGGER_ERROR(SQL_LOG,"MySQL SQL Error:{}",err.what());
+            
         }
         catch (const std::exception &e)
         {
-            std::cerr << e.what() << '\n';
+            SPDLOG_LOGGER_ERROR(SQL_LOG,"Std Error:{}",e.what());
+            
         }
-
-        // // 读取collection对象，弃用
-        // try
-        // {
-        //     mysqlx::Schema l_scPersonalServerDB = g_nSess->getSchema(MYSQL_DATABASE_NAME_PERSONAL_SERVER_DB);
-        //     mysqlx::Collection l_coWatchListFullView = l_scPersonalServerDB.getCollection(MYSQL_TABLE_NAME_WATCH_LIST_FULL_VIEW);
-        //     int l_iCount = l_coWatchListFullView.count();// 数据总数
-        //     mysqlx::DocResult l_DocResult = l_coWatchListFullView.find().limit(l_iPageSize).offset(l_iOffset).execute();
-        //     mysqlx::DbDoc l_DbDoc;
-        //     while(l_DbDoc=l_DocResult.fetchOne())
-        //     {
-        //     }
-        // }
-        // catch(const mysqlx::Error& err)
-        // {
-        //     std::cerr << err.what() << '\n';
-        // }
-        // catch(const std::exception& e)
-        // {
-        //     std::cerr << e.what() << '\n';
-        // }
         
-        return 0;
+        return JC_ERR_CODE_OK;
     }
 
     string getSqlQueryJsonString(string l_sSql)

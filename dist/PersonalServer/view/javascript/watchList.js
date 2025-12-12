@@ -48,9 +48,10 @@ async function fetchData(page = 1,pageSize = SQL_LIMIT_DEFAULT) {
             row.insertCell().textContent = item.id; 
             row.insertCell().textContent = item.name;
             row.insertCell().textContent = item.eng_name;
-            row.insertCell().textContent = item.tags.join(',');
             row.insertCell().textContent = item.type;
+            row.insertCell().textContent = item.tags.join(',');
             row.insertCell().textContent = item.rate;
+            row.insertCell().textContent = item.year;
             row.insertCell().textContent = item.start_time;
             row.insertCell().textContent = item.finish_time;
             // 新增操作列

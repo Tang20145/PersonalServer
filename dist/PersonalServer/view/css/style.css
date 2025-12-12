@@ -133,4 +133,6 @@ img {
       position: absolute;
       left:40%;
       right:5%;
+      /* 增加 Z-index，确保它在最前面，不然点不到链接 */
+     z-index: 100; /* 使用一个足够高的值 */
 }
