@@ -63,7 +63,10 @@ void jcLog::vJcLogInitAsyncLogger(std::shared_ptr<spdlog::logger> & p_logger , c
 {
     try
     {        
-        p_logger = spdlog::basic_logger_mt<spdlog::async_factory>(l_strLoggerName, l_strLogFileName);
+        // 基础日志对象
+        // p_logger = spdlog::basic_logger_mt<spdlog::async_factory>(l_strLoggerName, l_strLogFileName);
+        // 随日期变更的日志对象
+        p_logger = spdlog::daily_logger_mt(l_strLoggerName,l_strLogFileName,0,0);
         g_vLoggerManager[l_strLoggerName] = p_logger;
         // Under VisualStudio, this must be called before main finishes to workaround a known VS issue
         // spdlog::drop_all(); 

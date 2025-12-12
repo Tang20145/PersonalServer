@@ -1,7 +1,8 @@
 #include <iostream>
 #include "spdlog/spdlog.h"
 #include "spdlog/async.h" //support for async logging.
-#include "spdlog/sinks/basic_file_sink.h"
+//#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/daily_file_sink.h"
 
 // 封装日志
 #ifndef JCLOG_H_

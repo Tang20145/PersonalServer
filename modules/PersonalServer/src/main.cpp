@@ -13,9 +13,9 @@ int main()
     vInitLog();
     jcLog::vStartFlushing(jcLog::g_vLoggerManager,std::chrono::seconds(1));//一秒flush
 
-    MAIN_LOG->info("[{}]{} start init Sql",__FUNCTION__,__LINE__);
+    SPDLOG_LOGGER_INFO(MAIN_LOG,"start init Sql");
     sqlApi::init();
-    MAIN_LOG->info("[{}]{} end init Sql",__FUNCTION__,__LINE__);    
+    SPDLOG_LOGGER_INFO(MAIN_LOG,"end init Sql");
 
     // // 测试一下查询数据
     // {
@@ -35,9 +35,11 @@ int main()
     // 先实现WatchList
     svr.Get("/WatchList", [](const httplib::Request &l_Req, httplib::Response &res)
             {
+        
         std::string l_strPage = l_Req.get_param_value(SQL_PAGE);
         std::string l_strPageSize = l_Req.get_param_value(SQL_PAGE_SIZE);
-        
+        SPDLOG_LOGGER_INFO(MAIN_LOG,"Recv:{}",l_Req.target.c_str());
+
         std::string l_strResponseJson;
         int l_iRet = sqlApi::iGetWatchListFullView(l_strResponseJson,std::stoi(l_strPage),std::stoi(l_strPageSize));
         if(l_iRet==0)
@@ -106,6 +108,15 @@ int main()
 
 void vInitLog()
 {
+    // 全局设置日志格式模式
+    // 格式解释：
+    // [%Y-%m-%d %H:%M:%S.%e] : 日期和时间
+    // [%^%l%$]               : 彩色（如果支持）的日志级别
+    // [%s:%#]                : 文件名:行号
+    // [函数: %!]             : 函数名
+    // %v                     : 实际的日志消息
+    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [%s:%#] [%!] %v");// 设置了这个格式之后，需要用宏来写日志，使用->info函数会匹配不出文件名行号这些
+
     jcLog::vJcLogInitAsyncLogger(MAIN_LOG,"Main","log/main.log");
     jcLog::vJcLogInitAsyncLogger(SQL_LOG,"SQL","log/sql.log");
 

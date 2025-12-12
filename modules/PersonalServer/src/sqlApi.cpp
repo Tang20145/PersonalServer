@@ -42,11 +42,12 @@ namespace sqlApi
                 delete g_nSess;
                 g_nSess = nullptr;
             }
+
             try
             {
-                SQL_LOG->debug("[{}]{} start connect mysql Server using host:{} port:{} username:{} password:{} databaseName:{}",__FUNCTION__,__LINE__,host,33060,username,password,databaseName);
+                SPDLOG_LOGGER_INFO(SQL_LOG,"start connect mysql Server using host:{} port:{} username:{} password:{} databaseName:{}",host,33060,username,password,databaseName);
                 g_nSess = new mysqlx::Session(host, 33060, username, password, databaseName);
-                SQL_LOG->debug("[{}]{} init session success!",__FUNCTION__,__LINE__);
+                
                 // std::cout << "init session success!\n";
             }
             catch (const mysqlx::Error &e)
@@ -54,6 +55,7 @@ namespace sqlApi
                 std::cerr << e.what() << "\n"; // mysqlx的异常
                 return -1;
             }
+            SPDLOG_LOGGER_INFO(SQL_LOG,"init session success!");
         }
         return 0;
     }
@@ -206,7 +208,7 @@ namespace sqlApi
             // std::cout << "sql result : " << l_jResult.dump() << std::endl;
 
             p_strWatchListOutJson = l_jResult.dump();
-            SQL_LOG->debug("[{}]{} get result:{}",__FUNCTION__,__LINE__,p_strWatchListOutJson);
+            SPDLOG_LOGGER_INFO(SQL_LOG,"get result:{}",p_strWatchListOutJson);
             
         }
         catch (const mysqlx::Error &err)
