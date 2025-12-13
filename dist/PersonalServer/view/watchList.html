@@ -55,7 +55,30 @@
 
     <div id="watch-list-pagination-controls"></div>
 </div>
+<div id="add-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h2>添加新记录</h2>
+        <span class="close-btn" onclick="closeAddModal()">&times;</span>
+        <form id="add-record-form">
+            <label for="new-name">名称 (name):</label>
+            <input type="text" id="new-name" name="name" required><br>
+            
+            <label for="new-eng_name">英文名 (eng_name):</label>
+            <input type="text" id="new-eng_name" name="eng_name"><br>
+            
+            <label for="new-type">类型 (type):</label>
+            <input type="text" id="new-type" name="type" required><br>
 
+            <label for="new-rate">评分 (rate):</label>
+            <input type="number" id="new-rate" name="rate" min="1" max="10"><br>
+
+            <label for="new-start_time">开始时间 (start_time YYYY-MM-DD):</label>
+            <input type="text" id="new-start_time" name="start_time"><br>
+            
+            <button type="submit">保存记录</button>
+        </form>
+    </div>
+</div>
     <script src="javascript/watchList.js"></script> 
 </body>
 </html>

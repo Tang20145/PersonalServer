@@ -159,7 +159,6 @@ namespace sqlApi
         
 
             // 获取实际分页数据
-            SPDLOG_LOGGER_TRACE(SQL_LOG,"trace");
             std::stringstream l_ssSql;
             l_ssSql << "SELECT id,name,eng_name,tags,type,rate,status,year,"
                     <<"DATE_FORMAT(start_time, '%Y-%m-%d') as start_time,"
@@ -169,7 +168,7 @@ namespace sqlApi
                     << l_iPageSize
                     << " OFFSET "
                     << l_iOffset;
-            SPDLOG_LOGGER_TRACE(SQL_LOG,"trace");
+            
             mysqlx::SqlResult l_SqlResult = g_nSess->sql(l_ssSql.str()).execute();
 
             mysqlx::Row l_CurRow;
@@ -194,24 +193,23 @@ namespace sqlApi
                         l_jItem["tags"] = l_vecStrTags;
                     }
                 }
-                SPDLOG_LOGGER_TRACE(SQL_LOG,"trace");
+                
+                
                 l_jItem["type"] = string(l_CurRow[4].isNull() ? "null" : l_CurRow[4]);
                 l_jItem["rate"] = l_CurRow[5].isNull() ? -1 : int(l_CurRow[5]);
                 l_jItem["status"] = string(l_CurRow[6].isNull() ? "null" : l_CurRow[6]);
-                l_jItem["start_time"] = string(l_CurRow[7].isNull() ? "null" : l_CurRow[7]);
-                l_jItem["finish_time"] = string(l_CurRow[8].isNull() ? "null" : l_CurRow[8]);
-                
-                l_jItem["year"] = string(l_CurRow[11].isNull() ? "null" : l_CurRow[11]);
-                SPDLOG_LOGGER_TRACE(SQL_LOG,"trace");
+                l_jItem["year"] = l_CurRow[7].isNull() ? 0 : l_CurRow[7].get<int>();
+                l_jItem["start_time"] = string(l_CurRow[8].isNull() ? "null" : l_CurRow[8].get<std::string>());
+                l_jItem["finish_time"] = string(l_CurRow[9].isNull() ? "null" : l_CurRow[9].get<std::string>());
                 l_vecJsonResult.push_back(l_jItem);
+
             }
+
             l_jResult["data"] = l_vecJsonResult;
             l_jResult["totalPage"] = l_iTotalPages;
             l_jResult["page"] = l_iPage;
             
-            SPDLOG_LOGGER_TRACE(SQL_LOG,"trace");
             p_strWatchListOutJson = l_jResult.dump();
-            SPDLOG_LOGGER_TRACE(SQL_LOG,"trace");
             SPDLOG_LOGGER_INFO(SQL_LOG,"get result:{}",p_strWatchListOutJson);
             
         }
