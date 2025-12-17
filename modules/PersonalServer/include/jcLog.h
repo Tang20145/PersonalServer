@@ -1,3 +1,8 @@
+
+// 封装日志
+#ifndef JCLOG_H_
+#define JCLOG_H_
+
 // 避免编译过滤TRACE
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
 
@@ -7,13 +12,11 @@
 //#include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
 
-// 封装日志
-#ifndef JCLOG_H_
-#define JCLOG_H_
-
-
 namespace jcLog
 {
+
+    void vInitLog();// 初始化日志，程序开始时调用
+
     // 全局日志对象
     extern std::map<std::string,std::shared_ptr<spdlog::logger>> g_vLoggerManager;// 全局日志队列
     extern std::shared_ptr<spdlog::logger> g_mainLogger;

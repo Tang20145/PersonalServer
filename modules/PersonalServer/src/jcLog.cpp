@@ -10,6 +10,28 @@ std::shared_ptr<spdlog::logger> jcLog::g_sqlLogger;
 std::atomic<bool> jcLog::g_bStopFlushThread;
 std::unique_ptr<std::thread> jcLog::g_thFlushThread;
 
+void jcLog::vInitLog()
+{
+    // 全局设置日志格式模式
+    // 格式解释：
+    // [%Y-%m-%d %H:%M:%S.%e] : 日期和时间
+    // [%^%l%$]               : 彩色（如果支持）的日志级别
+    // [%s:%#]                : 文件名:行号
+    // [函数: %!]             : 函数名
+    // %v                     : 实际的日志消息
+    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e][%^%l%$] [%s:%#][%!] %v");// 设置了这个格式之后，需要用宏来写日志，使用->info函数会匹配不出文件名行号这些
+
+    jcLog::vJcLogInitAsyncLogger(MAIN_LOG,"Main","log/main.log");
+    jcLog::vJcLogInitAsyncLogger(SQL_LOG,"SQL","log/sql.log");
+
+    // 确保全局设置也允许 TRACE 级别的日志通过
+    spdlog::set_level(spdlog::level::trace);
+
+    MAIN_LOG->set_level(spdlog::level::trace);
+    SQL_LOG->set_level(spdlog::level::trace);
+}
+
+
 void jcLog::vFlusherThreadFunc(const std::map<std::string,std::shared_ptr<spdlog::logger>>& p_mapLoggers,std::chrono::seconds l_interval)
 {
 while (!g_bStopFlushThread.load()) {

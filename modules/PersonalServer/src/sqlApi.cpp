@@ -24,111 +24,83 @@ using string = std::string;
 namespace sqlApi
 {
 
-    mysqlx::Session *g_nSess = nullptr; // 定义会话
+    // mysqlx::Session *g_nSess = nullptr; // 移除全局会话
 
     // 初始化
     int init()
     {
-        // 读取json配置文件
+        // // 读取json配置文件
+        // std::ifstream l_fConfig("config.json");
+        // json l_jConfig = json::parse(l_fConfig);
+
+        // {
+        //     string host = l_jConfig["database"]["host"];
+        //     string username = l_jConfig["database"]["username"];
+        //     string password = l_jConfig["database"]["password"];
+        //     string databaseName = l_jConfig["database"]["databaseName"];
+        //     // 初始化会话
+        //     if (g_nSess != nullptr)
+        //     {
+        //         g_nSess->close();
+        //         delete g_nSess;
+        //         g_nSess = nullptr;
+        //     }
+
+        //     try
+        //     {
+        //         SPDLOG_LOGGER_INFO(SQL_LOG,"start connect mysql Server using host:{} port:{} username:{} password:{} databaseName:{}",host,33060,username,password,databaseName);
+        //         g_nSess = new mysqlx::Session(host, 33060, username, password, databaseName);
+                
+        //         // std::cout << "init session success!\n";
+        //     }
+        //     catch (const mysqlx::Error &e)
+        //     {
+        //         std::cerr << e.what() << "\n"; // mysqlx的异常
+        //         return -1;
+        //     }
+        //     SPDLOG_LOGGER_INFO(SQL_LOG,"init session success!");
+        // }
+        // return 0;
+
         std::ifstream l_fConfig("config.json");
         json l_jConfig = json::parse(l_fConfig);
+        
+        // 构造配置结构
+        sqlApi::DbConfig config;
+        config.host = l_jConfig["database"]["host"];
+        config.port = 33060;
+        config.user = l_jConfig["database"]["username"];
+        config.password = l_jConfig["database"]["password"];
+        config.databaseName = l_jConfig["database"]["databaseName"];
 
-        {
-            string host = l_jConfig["database"]["host"];
-            string username = l_jConfig["database"]["username"];
-            string password = l_jConfig["database"]["password"];
-            string databaseName = l_jConfig["database"]["databaseName"];
-            // 初始化会话
-            if (g_nSess != nullptr)
-            {
-                g_nSess->close();
-                delete g_nSess;
-                g_nSess = nullptr;
-            }
-
-            try
-            {
-                SPDLOG_LOGGER_INFO(SQL_LOG,"start connect mysql Server using host:{} port:{} username:{} password:{} databaseName:{}",host,33060,username,password,databaseName);
-                g_nSess = new mysqlx::Session(host, 33060, username, password, databaseName);
-                
-                // std::cout << "init session success!\n";
-            }
-            catch (const mysqlx::Error &e)
-            {
-                std::cerr << e.what() << "\n"; // mysqlx的异常
-                return -1;
-            }
-            SPDLOG_LOGGER_INFO(SQL_LOG,"init session success!");
+        SPDLOG_LOGGER_INFO(SQL_LOG, "start connect mysql Server...");
+        
+        // 使用 SessionPool 单例进行初始化
+        if (sqlApi::SessionPool::instance().init(config) != 0) {
+            return -1;
         }
+
+        SPDLOG_LOGGER_INFO(SQL_LOG, "init session pool success!");
         return 0;
     }
 
-    string getWatchListFullViewJsonString()
-    {
-        // 查询视图，需要将DATE格式化输出，不然会返回二进制类型RAW，无法转换为Json
-        string l_sSql = "SELECT id,name,eng_name,tags,type,rate,status,DATE_FORMAT(start_time, \"%Y-%m-%d\") AS formatted_start_time,DATE_FORMAT(finish_time, \"%Y-%m-%d\") AS formatted_finish_time,comment,link FROM WatchListFullView";
-        mysqlx::SqlResult l_rWatchListFullView = g_nSess->sql(l_sSql).execute();
-
-        // json 结果
-        json l_jWatchListFullView;
-
-        // 对每行处理，完成json结果写入
-        for (mysqlx::Row row : l_rWatchListFullView)
-        {
-            json l_jItem;
-
-            // 提取字段
-            l_jItem["id"] = row[0].get<int>();
-            l_jItem["name"] = row[1];
-            l_jItem["eng_name"] = row[2].isNull() ? "" : row[2];
-            // l_jItem["tags"] = row[3];
-            l_jItem["type"] = row[4];
-            // nullptr 会为什么？
-            if (!row[5].isNull())
-                l_jItem["rate"] = row[5].get<int>();
-            l_jItem["status"] = row[6];
-
-            if (!row[7].isNull())
-                l_jItem["start_time"] = row[7];
-            if (!row[8].isNull())
-                l_jItem["finish_time"] = row[8];
-            else
-                l_jItem["finish_time"].clear();
-            if (!row[9].isNull())
-                l_jItem["comment"] = row[9];
-            if (!row[10].isNull())
-                l_jItem["link"] = row[10];
-            else
-                l_jItem["link"].clear();
-            // 处理以逗号 ',' 为分隔的标签字段，转为vector
-            {
-                mysqlx::string l_sTagStr = row[3];
-                vector<mysqlx::string> l_vTags;
-                size_t l_ulPos;
-                while ((l_ulPos = l_sTagStr.find(',')) != mysqlx::string::npos) // 当找得到分隔符，l_ulPos为分隔符的索引
-                {
-                    // 取出此段字符并删掉
-                    l_vTags.push_back(l_sTagStr.substr(0, l_ulPos));
-                    l_sTagStr.erase(0, l_ulPos + 1);
-                }
-
-                if (!l_sTagStr.empty())
-                    l_vTags.push_back(l_sTagStr);
-                l_jItem["tags"] = l_vTags;
-            }
-
-            // 加入此行
-            l_jWatchListFullView.push_back(l_jItem);
-        }
-
-        return l_jWatchListFullView.dump();
-    }
-
+    // 获取观影视图
     int iGetWatchListFullView(std::string &p_strWatchListOutJson, int l_iPage, int l_iPageSize)
     {
         SPDLOG_LOGGER_TRACE(SQL_LOG,"Start");
+
+        // 1. ***新的连接获取方式***
+        std::unique_ptr<sqlApi::SessionGuard> sessionGuard;
+        try {
+            // 借用一个连接，如果池中没有且达到上限，这里可能会阻塞或抛出超时异常
+            sessionGuard = sqlApi::SessionPool::instance().acquire();
+        } catch (const std::exception& e) {
+            SPDLOG_LOGGER_ERROR(SQL_LOG, "Failed to acquire session: {}", e.what());
+            return JC_ERR_CODE_SQL_CONNECTION; // 返回连接错误
+        }
+
         // 求总页数
-        if (g_nSess == nullptr)
+        if (sessionGuard == nullptr)
             return JC_ERR_CODE_SQL_CONNECTION;
 
         int l_iOffset = 0;
@@ -144,7 +116,7 @@ namespace sqlApi
             int l_iTotalCount = 0;
             int l_iTotalPages = 0;
             // 获取总数据数量
-            mysqlx::SqlResult l_SqlCountResult = g_nSess->sql(std::string("SELECT COUNT(*) from ") + MYSQL_TABLE_NAME_WATCH_LIST_FULL_VIEW).execute();
+            mysqlx::SqlResult l_SqlCountResult = sessionGuard->get().sql(std::string("SELECT COUNT(*) from ") + MYSQL_TABLE_NAME_WATCH_LIST_FULL_VIEW).execute();
 
             mysqlx::Row l_Row = l_SqlCountResult.fetchOne();
             l_iTotalCount = int(l_Row[0]);
@@ -169,7 +141,7 @@ namespace sqlApi
                     << " OFFSET "
                     << l_iOffset;
             
-            mysqlx::SqlResult l_SqlResult = g_nSess->sql(l_ssSql.str()).execute();
+            mysqlx::SqlResult l_SqlResult = sessionGuard->get().sql(l_ssSql.str()).execute();
 
             mysqlx::Row l_CurRow;
             json l_jResult;
@@ -210,7 +182,10 @@ namespace sqlApi
             l_jResult["page"] = l_iPage;
             
             p_strWatchListOutJson = l_jResult.dump();
-            SPDLOG_LOGGER_INFO(SQL_LOG,"get result:{}",p_strWatchListOutJson);
+            if(p_strWatchListOutJson.length() < 100)
+                SPDLOG_LOGGER_INFO(SQL_LOG,"get result:{}",p_strWatchListOutJson);
+            else
+                SPDLOG_LOGGER_INFO(SQL_LOG,"get result:{}......",p_strWatchListOutJson.substr(0,100));
             
         }
         catch (const mysqlx::Error &err)
@@ -227,237 +202,92 @@ namespace sqlApi
         return JC_ERR_CODE_OK;
     }
 
-    string getSqlQueryJsonString(string l_sSql)
-    {
-        // 查询
-        mysqlx::SqlResult l_rSqlResult = g_nSess->sql(l_sSql).execute();
 
-        // 获取列名
-        const mysqlx::Columns &l_Columns = l_rSqlResult.getColumns();
-        std::vector<string> l_aColumnNames;
-        auto l_itColumns = l_Columns.begin();
-        while (l_itColumns != l_Columns.end())
-        {
-            l_aColumnNames.push_back(l_itColumns->getColumnLabel());
-            // 测试列名输出
-            // std::cout << l_aColumnNames.back().c_str()<< ",";
-            l_itColumns++;
-        }
 
-        // 结果
-        json l_jResDataJson;
-
-        // 每行
-        for (mysqlx::Row row : l_rSqlResult)
-        {
-            // 每行的数据json对象
-            json l_jItem;
-
-            // 每列（每个字段
-            for (int i = 0; i < l_aColumnNames.size(); i++)
-            {
-                string l_sColumnName = l_aColumnNames[i];
-                const mysqlx::Value l_Val = row[i];
-
-                // 字段为空
-                if (l_Val.isNull())
-                {
-                    l_jItem[l_sColumnName] = nullptr;
-                }
-                else // 字段不为空
-                {
-                    // 字段是逗号分隔的标签类型
-                    if (l_sColumnName.length() > strlen("_tags") && l_sColumnName.substr(l_sColumnName.length() - strlen("_tags"), strlen("_tags")) == "_tags") // 如果是标签类型
-                    {
-                        string l_sTagStr = l_Val.get<string>();
-                        vector<string> l_vTags;
-                        int l_iPos;
-                        while ((l_iPos = l_sTagStr.find(',')) != string::npos) // 当找得到分隔符，l_iPos为分隔符的索引
-                        {
-                            // 取出此段字符并删掉
-                            l_vTags.push_back(l_sTagStr.substr(0, l_iPos));
-                            l_sTagStr.erase(0, l_iPos + 1);
-                        }
-
-                        if (!l_sTagStr.empty())
-                            l_vTags.push_back(l_sTagStr);
-
-                        // 直接返回不带_tags尾缀的
-                        l_jItem[l_sColumnName.substr(0, l_sColumnName.length() - strlen("_tags"))] = l_vTags;
-                    }
-                    else // 字段为正常单个值
-                    {
-                        switch (l_Val.getType())
-                        {
-                        case mysqlx::Value::Type::INT64:
-                            l_jItem[l_sColumnName] = l_Val.get<int64_t>();
-                            break;
-                        case mysqlx::Value::Type::UINT64:
-                            l_jItem[l_sColumnName] = l_Val.get<u_int64_t>();
-                            break;
-                        default:
-                            l_jItem[l_sColumnName] = l_Val.get<string>();
-                            break;
-                        }
-                    }
-                }
+    // ai写的
+    // 初始化连接池
+    int SessionPool::init(const DbConfig& config) {
+        m_config = config;
+        SPDLOG_LOGGER_INFO(SQL_LOG, "SessionPool: Initializing with min size {}", MIN_POOL_SIZE);
+        
+        try {
+            // 预先创建最小数量的连接
+            for (size_t i = 0; i < MIN_POOL_SIZE; ++i) {
+                mysqlx::Session* sess = createSession();
+                m_idleSessions.push_back(sess);
             }
-            l_jResDataJson.push_back(l_jItem);
+            SPDLOG_LOGGER_INFO(SQL_LOG, "SessionPool: {} sessions successfully created.", MIN_POOL_SIZE);
+            return 0;
+        } catch (const mysqlx::Error &e) {
+            SPDLOG_LOGGER_ERROR(SQL_LOG, "SessionPool initialization failed: {}", e.what());
+            return -1;
         }
-        json l_jResJson;
-        l_jResJson["recordsTotal"] = l_jResDataJson.size();
-        l_jResJson["data"] = l_jResDataJson;
-        return l_jResJson.dump();
     }
 
-    // 通用查询
-    // 暂不实现关键词查找
-    std::string getSqlQueryJsonString(std::unordered_map<std::string, std::string> &l_mIn)
-    {
-        // 获取查询语句
-        if (l_mIn.find("sql") == l_mIn.end() || l_mIn.find("countSql") == l_mIn.end())
-        {
-            printf("sql is empty\n");
-            return "";
+    // ai写的
+    // 线程安全地获取连接 (借用)
+    std::unique_ptr<SessionGuard> SessionPool::acquire() {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        
+        // 1. 检查是否有空闲连接
+        if (!m_idleSessions.empty()) {
+            mysqlx::Session* session = m_idleSessions.back();
+            m_idleSessions.pop_back();
+            SPDLOG_LOGGER_DEBUG(SQL_LOG,"Get Session: {:p}",(void*)session);
+            // 可以在此处添加连接健康检查，例如 session->ping()
+            return std::make_unique<SessionGuard>(session, this);
         }
-        string l_sSql = l_mIn["sql"];
-        string l_sCountSql = l_mIn["countSql"];
-        int l_iCount = g_nSess->sql(l_sCountSql).execute().fetchOne()[0].get<int>();
-        int l_iFilterCount = l_iCount;
-
-        // 组装分页查询语句
-        {
-            // 默认分页参数，防止返回结果过多
-            int l_iPage = 1;
-            int l_iPageSize = 10;
-            int l_iOffset = 0;
-            string l_sKeyword;
-            string l_sSortField;
-            string l_sSortDirection = "asc"; // 默认增
-
-            // 排序
-            if (l_mIn.find("sortField") != l_mIn.end())
-            {
-                // 获取用于排序的字段
-                l_sSql += " ORDER BY " + l_mIn["sortField"];
-            }
-            if (l_mIn.find("sortDirection") != l_mIn.end())
-            {
-                // 排序方向
-                l_sSortDirection = l_mIn["sortDirection"];
-            }
-            l_sSql += " " + l_sSortDirection;
-
-            // 分页
-            if (l_mIn.find("pageSize") != l_mIn.end())
-            {
-                // 获取每页大小
-                l_iPageSize = atoi(l_mIn["pageSize"].c_str());
-            }
-            if (l_mIn.find("page") != l_mIn.end())
-            {
-                // 获取页面
-                l_iPage = atoi(l_mIn["page"].c_str());
-                // 获取偏移
-                l_iOffset = (l_iPage - 1) * l_iPageSize;
-            }
-            l_sSql += " LIMIT " + to_string(l_iOffset) + "," + to_string(l_iPageSize);
-
-            // 查询关键字（暂不实现
-            if (l_mIn.find("keyword") != l_mIn.end())
-            {
-                // 获取查找关键词
-                l_sKeyword = l_mIn["keyword"];
+        
+        // 2. 如果没有空闲连接，检查是否达到最大限制
+        if (m_idleSessions.size() < MAX_POOL_SIZE) {
+            // 还没满，创建新连接 (在锁内，但这通常很快)
+            try {
+                mysqlx::Session* session = createSession();
+                SPDLOG_LOGGER_INFO(SQL_LOG, "SessionPool: Created new session (current size: {}).", m_idleSessions.size() + 1);
+                return std::make_unique<SessionGuard>(session, this);
+            } catch (const mysqlx::Error &e) {
+                SPDLOG_LOGGER_ERROR(SQL_LOG, "SessionPool: Failed to create new session: {}", e.what());
+                throw; // 重新抛出异常，请求失败
             }
         }
-
-        printf("SQL : %s\n", l_sSql.c_str());
-
-        // 查询
-        mysqlx::SqlResult l_rSqlResult = g_nSess->sql(l_sSql).execute();
-        // mysqlx::SqlResult l_rTotal = g_nSess->sql(l_sCountSql).execute().fetchOne()[0].get<int>();
-        // int l_iTotal = l_rTotal.fetchOne()[0].get<int>();
-
-        // 获取列名
-        const mysqlx::Columns &l_Columns = l_rSqlResult.getColumns();
-        std::vector<string> l_aColumnNames;
-        auto l_itColumns = l_Columns.begin();
-        while (l_itColumns != l_Columns.end())
-        {
-            l_aColumnNames.push_back(l_itColumns->getColumnLabel());
-            // 测试列名输出
-            // std::cout << l_aColumnNames.back().c_str()<< ",";
-            l_itColumns++;
+        
+        // 3. 达到最大限制，阻塞等待空闲连接
+        SPDLOG_LOGGER_TRACE(SQL_LOG, "SessionPool: Pool full, waiting for connection...");
+        // 等待条件变量，最多等待 5 秒（防止无限阻塞）
+        if (m_cond.wait_for(lock, std::chrono::seconds(5), [this]{ return !m_idleSessions.empty(); })) {
+            // 被唤醒且有连接
+            mysqlx::Session* session = m_idleSessions.back();
+            m_idleSessions.pop_back();
+            return std::make_unique<SessionGuard>(session, this);
+        } else {
+            // 等待超时
+            SPDLOG_LOGGER_ERROR(SQL_LOG, "SessionPool: Acquire timed out (Pool size: {}).", MAX_POOL_SIZE);
+            throw std::runtime_error("Database connection pool timeout");
         }
-
-        // 结果
-        json l_jResDataJson;
-
-        // 每行
-        for (mysqlx::Row row : l_rSqlResult)
-        {
-            // 每行的数据json对象
-            json l_jItem;
-
-            // 每列（每个字段
-            for (int i = 0; i < l_aColumnNames.size(); i++)
-            {
-                string l_sColumnName = l_aColumnNames[i];
-                const mysqlx::Value l_Val = row[i];
-
-                // 字段是逗号分隔的标签类型
-                if (l_sColumnName.length() > strlen("_tags") && l_sColumnName.substr(l_sColumnName.length() - strlen("_tags"), strlen("_tags")) == "_tags") // 如果是标签类型
-                {
-                    vector<string> l_vTags;
-
-                    if (!l_Val.isNull())
-                    {
-                        string l_sTagStr = l_Val.get<string>();
-                        int l_iPos;
-                        while ((l_iPos = l_sTagStr.find(',')) != string::npos) // 当找得到分隔符，l_iPos为分隔符的索引
-                        {
-                            // 取出此段字符并删掉
-                            l_vTags.push_back(l_sTagStr.substr(0, l_iPos));
-                            l_sTagStr.erase(0, l_iPos + 1);
-                        }
-
-                        if (!l_sTagStr.empty())
-                            l_vTags.push_back(l_sTagStr);
-                    }
-
-                    // 直接返回不带_tags尾缀的
-                    l_jItem[l_sColumnName.substr(0, l_sColumnName.length() - strlen("_tags"))] = l_vTags;
-                }
-                else if (l_Val.isNull()) // 字段为空
-                {
-                    l_jItem[l_sColumnName] = ""; // 表示空
-                }
-                else // 字段不为空
-                {
-                    switch (l_Val.getType())
-                    {
-                    case mysqlx::Value::Type::INT64:
-                        l_jItem[l_sColumnName] = l_Val.get<int64_t>();
-                        break;
-                    case mysqlx::Value::Type::UINT64:
-                        l_jItem[l_sColumnName] = l_Val.get<u_int64_t>();
-                        break;
-                    default:
-                        l_jItem[l_sColumnName] = l_Val.get<string>();
-                        break;
-                    }
-                }
-                // string gdbString = l_jItem.dump();
-                // cout << "json : " << gdbString << endl;
-            }
-            l_jResDataJson.push_back(l_jItem);
-        }
-        json l_jResJson;
-        l_jResJson["draw"] = atoi(l_mIn["draw"].c_str());
-        l_jResJson["recordsTotal"] = l_iCount;
-        l_jResJson["recordsFiltered"] = l_iCount;
-        l_jResJson["data"] = l_jResDataJson;
-
-        return l_jResJson.dump();
     }
+
+    // ai写的
+    // 线程安全地释放连接 (归还)
+    void SessionPool::release(mysqlx::Session* session) {
+        if (!session) return;
+
+        std::unique_lock<std::mutex> lock(m_mutex);
+        // 归还前，可以检查连接是否仍然健康。如果不健康，delete session 并记录日志。
+        
+        m_idleSessions.push_back(session);
+        SPDLOG_LOGGER_DEBUG(SQL_LOG, "Released Session: {:p}",(void*)session);
+        
+        // 通知所有等待的线程，有新的连接可用
+        m_cond.notify_one(); 
+    }
+
+    // ai写的
+    // 析构函数：清理所有连接
+    SessionPool::~SessionPool() {
+        for (mysqlx::Session* session : m_idleSessions) {
+            delete session;
+        }
+        m_idleSessions.clear();
+    }
+
 } // namespace sqlApi
