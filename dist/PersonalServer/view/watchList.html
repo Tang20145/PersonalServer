@@ -1,4 +1,5 @@
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -6,79 +7,59 @@
     <link href="css/style.css" rel="stylesheet">
     <title>Jc's WatchList</title>
 </head>
+
 <body>
     <div class="container">
         <div class="row">
             <div class="lh">
-                  <div class="h1">
+                <div class="h1">
                     下面是我的观影列表数据库（测试版
-                  </div>
+                </div>
             </div>
-        </div> 
-      <div class="row">
-        <a href="index.html">返回</a>
-      </div>
-    </div>
-    <div class="container">
+        </div>
         <div class="row">
-            <button id="add-new-btn">
-                + 添加新记录
-            </button>
+            <a href="index.html">返回</a>
         </div>
     </div>
     <div class="container">
-    <table>
-        <!-- 头部 -->
-        <thead>
-            <!-- 一行 -->
-            <tr>
-                <!-- 列名 -->
-                <th>id</th>
-                <th>name</th>
-                <th>eng_name</th>
-                <th>type</th>
-                <th>tags</th>
-                <th>rate</th>
-                <th>year</th>
-                <th>start_time</th>
-                <th>finish_time</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-
-        <tbody id="watch-list-tbody">
-            <!-- 表格主体 javascropt通过这个 id 找到他-->
-
-
-        </tbody>
-    </table>
-
-    <div id="watch-list-pagination-controls"></div>
-</div>
-<div id="add-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <h2>添加新记录</h2>
-        <span class="close-btn" onclick="closeAddModal()">&times;</span>
-        <form id="add-record-form">
-            <label for="new-name">名称 (name):</label>
-            <input type="text" id="new-name" name="name" required><br>
-            
-            <label for="new-eng_name">英文名 (eng_name):</label>
-            <input type="text" id="new-eng_name" name="eng_name"><br>
-            
-            <label for="new-type">类型 (type):</label>
-            <input type="text" id="new-type" name="type" required><br>
-
-            <label for="new-rate">评分 (rate):</label>
-            <input type="number" id="new-rate" name="rate" min="1" max="10"><br>
-
-            <label for="new-start_time">开始时间 (start_time YYYY-MM-DD):</label>
-            <input type="text" id="new-start_time" name="start_time"><br>
-            
-            <button type="submit">保存记录</button>
-        </form>
+        <div class="row">
+            <label for="pageSelect">每页显示</label>
+            <select id="pageSizeSelect" onchange="changePageSize()">
+                <option value="10 ">10</option>
+                <option value="20 " selected>20</option>
+                <option value="50 ">50</option>
+                <option value="100 ">100</option>
+            </select>
+        </div>
     </div>
-</div>
-    <script src="javascript/watchList.js"></script> 
+    <div class="container">
+        <table>
+            <!-- 头部 -->
+            <thead>
+                <!-- 一行 -->
+                <tr>
+                    <!-- 列名 -->
+                    <th>id</th>
+                    <th>name</th>
+                    <th>eng_name</th>
+                    <th>type</th>
+                    <th>tags</th>
+                    <th>rate</th>
+                    <th>year</th>
+                    <th>start_time</th>
+                    <th>finish_time</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="watch-list-tbody">
+                <!-- 表格主体 javascropt通过这个 id 找到他-->
+            </tbody>
+        </table>
+        <div id="watch-list-pagination-controls"></div>
+        <!-- 分页控制器 -->
+    </div>
+    <script src="javascript/watchList.js"></script>
 </body>
+
 </html>

@@ -191,12 +191,12 @@ namespace sqlApi
         catch (const mysqlx::Error &err)
         {
             SPDLOG_LOGGER_ERROR(SQL_LOG,"MySQL SQL Error:{}",err.what());
-            
+            return JC_ERR_CODE_SQL_ERR_UNKNOWN;
         }
         catch (const std::exception &e)
         {
             SPDLOG_LOGGER_ERROR(SQL_LOG,"Std Error:{}",e.what());
-            
+            return JC_ERR_CODE_ERR;
         }
         
         return JC_ERR_CODE_OK;
