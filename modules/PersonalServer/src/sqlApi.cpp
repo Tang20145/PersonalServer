@@ -29,38 +29,6 @@ namespace sqlApi
     // 初始化
     int init()
     {
-        // // 读取json配置文件
-        // std::ifstream l_fConfig("config.json");
-        // json l_jConfig = json::parse(l_fConfig);
-
-        // {
-        //     string host = l_jConfig["database"]["host"];
-        //     string username = l_jConfig["database"]["username"];
-        //     string password = l_jConfig["database"]["password"];
-        //     string databaseName = l_jConfig["database"]["databaseName"];
-        //     // 初始化会话
-        //     if (g_nSess != nullptr)
-        //     {
-        //         g_nSess->close();
-        //         delete g_nSess;
-        //         g_nSess = nullptr;
-        //     }
-
-        //     try
-        //     {
-        //         SPDLOG_LOGGER_INFO(SQL_LOG,"start connect mysql Server using host:{} port:{} username:{} password:{} databaseName:{}",host,33060,username,password,databaseName);
-        //         g_nSess = new mysqlx::Session(host, 33060, username, password, databaseName);
-                
-        //         // std::cout << "init session success!\n";
-        //     }
-        //     catch (const mysqlx::Error &e)
-        //     {
-        //         std::cerr << e.what() << "\n"; // mysqlx的异常
-        //         return -1;
-        //     }
-        //     SPDLOG_LOGGER_INFO(SQL_LOG,"init session success!");
-        // }
-        // return 0;
 
         std::ifstream l_fConfig("config.json");
         json l_jConfig = json::parse(l_fConfig);
@@ -90,18 +58,21 @@ namespace sqlApi
         SPDLOG_LOGGER_TRACE(SQL_LOG,"Start");
 
         // 1. ***新的连接获取方式***
-        std::unique_ptr<sqlApi::SessionGuard> sessionGuard;
+        std::unique_ptr<sqlApi::SessionItem> l_ptrSessionItem;
         try {
             // 借用一个连接，如果池中没有且达到上限，这里可能会阻塞或抛出超时异常
-            sessionGuard = sqlApi::SessionPool::instance().acquire();
+            l_ptrSessionItem = sqlApi::SessionPool::instance().acquire();
         } catch (const std::exception& e) {
             SPDLOG_LOGGER_ERROR(SQL_LOG, "Failed to acquire session: {}", e.what());
             return JC_ERR_CODE_SQL_CONNECTION; // 返回连接错误
         }
 
         // 求总页数
-        if (sessionGuard == nullptr)
+        if (l_ptrSessionItem.get() == nullptr)
+        {
+            SPDLOG_LOGGER_ERROR(SQL_LOG,"acquire sql session null!");
             return JC_ERR_CODE_SQL_CONNECTION;
+        }
 
         int l_iOffset = 0;
         if (l_iPage < 1)
@@ -116,7 +87,7 @@ namespace sqlApi
             int l_iTotalCount = 0;
             int l_iTotalPages = 0;
             // 获取总数据数量
-            mysqlx::SqlResult l_SqlCountResult = sessionGuard->get().sql(std::string("SELECT COUNT(*) from ") + MYSQL_TABLE_NAME_WATCH_LIST_FULL_VIEW).execute();
+            mysqlx::SqlResult l_SqlCountResult = l_ptrSessionItem.get()->get().sql(std::string("SELECT COUNT(*) from ") + MYSQL_TABLE_NAME_WATCH_LIST_FULL_VIEW).execute();
 
             mysqlx::Row l_Row = l_SqlCountResult.fetchOne();
             l_iTotalCount = int(l_Row[0]);
@@ -128,7 +99,11 @@ namespace sqlApi
                 l_iPage = l_iTotalPages;
                 l_iOffset = (l_iPage - 1) * l_iPageSize;
             }
-        
+
+            while(l_SqlCountResult.fetchOne())
+            {
+                SPDLOG_LOGGER_TRACE(SQL_LOG,"SELECT COUNT(*) from {} , fetched one more row",MYSQL_TABLE_NAME_WATCH_LIST_FULL_VIEW);
+            }
 
             // 获取实际分页数据
             std::stringstream l_ssSql;
@@ -141,7 +116,7 @@ namespace sqlApi
                     << " OFFSET "
                     << l_iOffset;
             
-            mysqlx::SqlResult l_SqlResult = sessionGuard->get().sql(l_ssSql.str()).execute();
+            mysqlx::SqlResult l_SqlResult = l_ptrSessionItem.get()->get().sql(l_ssSql.str()).execute();
 
             mysqlx::Row l_CurRow;
             json l_jResult;
@@ -202,92 +177,59 @@ namespace sqlApi
         return JC_ERR_CODE_OK;
     }
 
+    // --- SessionItem 析构时自动归还 ---
+    SessionItem::~SessionItem() {
+        if (m_session) {
+            SessionPool::instance().release(m_session);
+        }
+    }
 
+    // --- 池管理逻辑 ---
 
-    // ai写的
-    // 初始化连接池
     int SessionPool::init(const DbConfig& config) {
         m_config = config;
-        SPDLOG_LOGGER_INFO(SQL_LOG, "SessionPool: Initializing with min size {}", MIN_POOL_SIZE);
+        return 0;
+    }
+
+    mysqlx::Session* SessionPool::createNew() {
+        SPDLOG_LOGGER_TRACE(SQL_LOG,"new session created");
+        return new mysqlx::Session(m_config.host, m_config.port, m_config.user, m_config.password, m_config.databaseName);
+    }
+
+    std::unique_ptr<SessionItem> SessionPool::acquire() {
+        std::lock_guard<std::mutex> lock(m_mutex);
         
-        try {
-            // 预先创建最小数量的连接
-            for (size_t i = 0; i < MIN_POOL_SIZE; ++i) {
-                mysqlx::Session* sess = createSession();
-                m_idleSessions.push_back(sess);
+        auto now = std::chrono::steady_clock::now();
+
+        while (!m_idleSessions.empty()) {
+            mysqlx::Session* s = m_idleSessions.front();
+            auto lastTime = m_idleTimes.front();
+            
+            m_idleSessions.pop_front();
+            m_idleTimes.pop_front();
+
+            // 核心：60秒超时逻辑
+            if (std::chrono::duration_cast<std::chrono::seconds>(now - lastTime).count() > 60) {
+                try { s->close(); } catch(...) {}
+                SPDLOG_LOGGER_TRACE(SQL_LOG,"delete session {:p}",(void*)s);
+                delete s;
+                // 过期了就新建一个直接给用户
+                return std::make_unique<SessionItem>(createNew());
             }
-            SPDLOG_LOGGER_INFO(SQL_LOG, "SessionPool: {} sessions successfully created.", MIN_POOL_SIZE);
-            return 0;
-        } catch (const mysqlx::Error &e) {
-            SPDLOG_LOGGER_ERROR(SQL_LOG, "SessionPool initialization failed: {}", e.what());
-            return -1;
+
+            // 没过期，封装返回
+            return std::make_unique<SessionItem>(s);
         }
+
+        // 池子空，新建
+        return std::make_unique<SessionItem>(createNew());
     }
 
-    // ai写的
-    // 线程安全地获取连接 (借用)
-    std::unique_ptr<SessionGuard> SessionPool::acquire() {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        
-        // 1. 检查是否有空闲连接
-        if (!m_idleSessions.empty()) {
-            mysqlx::Session* session = m_idleSessions.back();
-            m_idleSessions.pop_back();
-            SPDLOG_LOGGER_DEBUG(SQL_LOG,"Get Session: {:p}",(void*)session);
-            // 可以在此处添加连接健康检查，例如 session->ping()
-            return std::make_unique<SessionGuard>(session, this);
-        }
-        
-        // 2. 如果没有空闲连接，检查是否达到最大限制
-        if (m_idleSessions.size() < MAX_POOL_SIZE) {
-            // 还没满，创建新连接 (在锁内，但这通常很快)
-            try {
-                mysqlx::Session* session = createSession();
-                SPDLOG_LOGGER_INFO(SQL_LOG, "SessionPool: Created new session (current size: {}).", m_idleSessions.size() + 1);
-                return std::make_unique<SessionGuard>(session, this);
-            } catch (const mysqlx::Error &e) {
-                SPDLOG_LOGGER_ERROR(SQL_LOG, "SessionPool: Failed to create new session: {}", e.what());
-                throw; // 重新抛出异常，请求失败
-            }
-        }
-        
-        // 3. 达到最大限制，阻塞等待空闲连接
-        SPDLOG_LOGGER_TRACE(SQL_LOG, "SessionPool: Pool full, waiting for connection...");
-        // 等待条件变量，最多等待 5 秒（防止无限阻塞）
-        if (m_cond.wait_for(lock, std::chrono::seconds(5), [this]{ return !m_idleSessions.empty(); })) {
-            // 被唤醒且有连接
-            mysqlx::Session* session = m_idleSessions.back();
-            m_idleSessions.pop_back();
-            return std::make_unique<SessionGuard>(session, this);
-        } else {
-            // 等待超时
-            SPDLOG_LOGGER_ERROR(SQL_LOG, "SessionPool: Acquire timed out (Pool size: {}).", MAX_POOL_SIZE);
-            throw std::runtime_error("Database connection pool timeout");
-        }
-    }
-
-    // ai写的
-    // 线程安全地释放连接 (归还)
-    void SessionPool::release(mysqlx::Session* session) {
-        if (!session) return;
-
-        std::unique_lock<std::mutex> lock(m_mutex);
-        // 归还前，可以检查连接是否仍然健康。如果不健康，delete session 并记录日志。
-        
-        m_idleSessions.push_back(session);
-        SPDLOG_LOGGER_DEBUG(SQL_LOG, "Released Session: {:p}",(void*)session);
-        
-        // 通知所有等待的线程，有新的连接可用
-        m_cond.notify_one(); 
-    }
-
-    // ai写的
-    // 析构函数：清理所有连接
-    SessionPool::~SessionPool() {
-        for (mysqlx::Session* session : m_idleSessions) {
-            delete session;
-        }
-        m_idleSessions.clear();
+    void SessionPool::release(mysqlx::Session* s) {
+        if (!s) return;
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_idleSessions.push_back(s);
+        m_idleTimes.push_back(std::chrono::steady_clock::now());
     }
 
 } // namespace sqlApi
