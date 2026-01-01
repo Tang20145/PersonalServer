@@ -5,10 +5,11 @@ Personal Server 💽
 
 这是我计划用来运行我的个人网站的服务器项目（目前是半成品，将看心情持续更新 --JcGam1ng
 
-
+服务器当前域名：[jcgam1ng.cn](http://jcgam1ng.cn)
 
 > 本项目使用语言：`C++` \
-> 开发环境配置：`CMake`+`G++`\
+> 开发环境配置：`CMake`+`g++`\
+> 运行环境：Ubuntu 22.04 x86_64\
 > 使用第三方开源库:
 > >[cpp-httplib](https://github.com/yhirose/cpp-httplib) 实现HTTP服务\
 [json](https://json.nlohmann.me/) 实现json\

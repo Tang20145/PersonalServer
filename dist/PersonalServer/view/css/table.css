@@ -1,0 +1,90 @@
+/* 表格基础样式 */
+table {
+    width: 100%;
+    border-collapse: separate; /* 使用 separate 以允许圆角 */
+    border-spacing: 0;
+    margin-top: 20px;
+    background-color: rgba(0, 0, 0, 0.2); /* 半透明黑，呼应你的风格 */
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* 表头样式 */
+thead {
+    background-color: #000000;
+}
+
+th {
+    padding: 15px 10px;
+    text-align: left;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #f5ac72; /* 使用你 avatar 边框的颜色作为强调 */
+    border-bottom: 2px solid #555;
+}
+
+/* 单元格样式 */
+td {
+    padding: 12px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.95rem;
+    color: #facfad; /* 保持你的文字颜色 */
+}
+
+/* 悬停高亮行 */
+tbody tr:hover {
+    background-color: rgba(250, 207, 173, 0.05); /* 淡淡的文字色高亮 */
+    transition: background-color 0.3s ease;
+}
+
+/* 最后一行去掉下边框 */
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 响应式：针对 rate 等短数据居中 */
+td:nth-child(6), th:nth-child(6) {
+    text-align: center;
+}
+
+/* 分页控制器美化 */
+#watch-list-pagination-controls {
+    margin: 30px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 按钮样式优化 */
+button, select {
+    background-color: #2d2c2c;
+    color: #facfad;
+    border: 1px solid #f5ac72;
+    padding: 6px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+button:hover:not(:disabled) {
+    background-color: #f5ac72;
+    color: #000;
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: #666;
+}
+
+input[type="number"] {
+    background: #2d2c2c;
+    border: 1px solid #555;
+    color: #facfad;
+    padding: 5px;
+    border-radius: 5px;
+    outline: none;
+}
