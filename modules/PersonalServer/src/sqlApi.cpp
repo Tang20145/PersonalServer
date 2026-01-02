@@ -192,13 +192,15 @@ namespace sqlApi
     }
 
     mysqlx::Session* SessionPool::createNew() {
-        SPDLOG_LOGGER_TRACE(SQL_LOG,"new session created");
-        return new mysqlx::Session(m_config.host, m_config.port, m_config.user, m_config.password, m_config.databaseName);
+        mysqlx::Session* p = new mysqlx::Session(m_config.host, m_config.port, m_config.user, m_config.password, m_config.databaseName);
+        SPDLOG_LOGGER_TRACE(SQL_LOG,"new session created {:p}",(void*)p);
+        return p;
     }
 
     std::unique_ptr<SessionItem> SessionPool::acquire() {
+        SPDLOG_LOGGER_TRACE(SQL_LOG,"Start");
         std::lock_guard<std::mutex> lock(m_mutex);
-        
+        SPDLOG_LOGGER_TRACE(SQL_LOG,"Get session mutex");
         auto now = std::chrono::steady_clock::now();
 
         while (!m_idleSessions.empty()) {
@@ -216,7 +218,6 @@ namespace sqlApi
                 // 过期了就新建一个直接给用户
                 return std::make_unique<SessionItem>(createNew());
             }
-
             // 没过期，封装返回
             return std::make_unique<SessionItem>(s);
         }

@@ -28,7 +28,7 @@ int main()
 
     // 先实现WatchList
     svr.Get("/WatchList", [](const httplib::Request &l_Req, httplib::Response &res)
-            {
+    {
         
         std::string l_strPage = l_Req.get_param_value(SQL_PAGE);
         std::string l_strPageSize = l_Req.get_param_value(SQL_PAGE_SIZE);
@@ -45,47 +45,26 @@ int main()
         else
         {
             SPDLOG_LOGGER_ERROR(MAIN_LOG,"iGetWatchListFullView Fail:{}",l_iRet);
-        } });
+        } 
+    });
 
-    // dataAPI路径标识查询数据库接口，定义/dataAPI的Get路由，Request 会存储用户发送的参数
-    svr.Get("/dataAPI", [](const httplib::Request &l_Req, httplib::Response &res)
-            {
-                // 获取基本参数，页面大小和页码
-                std::string l_strTableName = l_Req.get_param_value(SQL_TABLE_NAME);
-                std::string l_strPage = l_Req.get_param_value(SQL_PAGE);
-                std::string l_strPageSize = l_Req.get_param_value(SQL_PAGE_SIZE);
+    // 管理员登陆接口
+    svr.Post("/api/ManagerLogin",[](const httplib::Request &l_Req, httplib::Response &res){
+        SPDLOG_LOGGER_INFO(MAIN_LOG,"Recv:{}",l_Req.body.c_str());
+        auto json_data = json::parse(l_Req.body);
+        std::string input_pwd = json_data["password"];
 
-                int l_iPage = 1;
-                int l_iPageSize = SQL_LIMIT_DEFAULT;
+        // 先把密码和token写死
+        if (input_pwd == "testPasswd") {
+            std::string token = "testToken"; 
+            
+            res.status = 200;
+            res.set_content("{\"token\": \"" + token + "\"}", "application/json");
+        } else {
+            res.status = 401; // 未授权
+        }
 
-                // 页码
-                {
-                    if (!l_strPage.empty())
-                    {
-                        try
-                        {
-                            l_iPage = std::stoi(l_strPage);
-                        }
-                        catch (const std::exception &e)
-                        {
-                            printf("[%s]%d :error %s\n", __FUNCTION__, __LINE__, e.what());
-                            l_iPage = 1;
-                        }
-                    }
-                    if (l_iPage < 1)
-                    {
-                        printf("[%s]%d :error page: %d < 1\n", __FUNCTION__, __LINE__, l_iPage);
-                        l_iPage = 1;
-                    }
-                }
-
-                // 偏移
-                int l_iOffset = (l_iPage - 1) * l_iPageSize;
-
-                std::string l_strSql = "select name,type,rate from " +
-                                       l_strTableName +
-                                       " LIMIT " + std::to_string(l_iPageSize) +
-                                       " OFFSET " + std::to_string(l_iOffset); });
+    });
 
     // 绑定 ​​1024 以下的端口​​需要 root权限，故需要sudo运行
     if (!svr.bind_to_port("0.0.0.0", 80))

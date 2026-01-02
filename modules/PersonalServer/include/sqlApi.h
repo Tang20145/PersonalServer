@@ -1,6 +1,7 @@
 #ifndef SQLAPI_H_
 #define SQLAPI_H_
 
+#include <cstdint> // 在ArchLinux上需要在前面添加这个，不然编译出错
 #include "xdevapi.h"
 #include "json.hpp"
 #include <unordered_map>

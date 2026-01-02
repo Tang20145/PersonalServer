@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>管理登录</title>
+    <link href="css/style.css" rel="stylesheet">
+    <meta charset="utf-8">
+</head>
+<body>
+    <div class="container" id="header">
+            <div class="row">
+                <h2>数据库管理系统 - 身份验证</h2>
+            </div>
+            <div class="row">
+                <input type="password" id="password" placeholder="请输入管理员密码">
+                <button onclick="login()">登录</button>
+            </div>
+            
+    </div>
+    
+    
+
+    <script>
+        async function login() {
+            const password = document.getElementById('password').value;
+            const response = await fetch('/api/ManagerLogin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: password })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // 将服务器返回的 token 存入 localStorage
+                sessionStorage.setItem('admin_token', data.token);
+                alert('登录成功！');
+                window.location.href = '/index.html'; // 跳转到你的管理页
+            } else {
+                alert('密码错误！');
+            }
+        }
+    </script>
+</body>
+</html>
